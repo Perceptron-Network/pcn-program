@@ -1,6 +1,9 @@
 {
   "license": "ISC",
   "scripts": {
+    "app:dev": "yarn --cwd app dev",
+    "app:build": "yarn --cwd app build",
+    "app:test": "yarn --cwd app test",
     "test": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts",
     "test:ts": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts",
     "gen-clients": "CODAMA_POST_BUILD_SKIP=1 NO_DNA=1 anchor build && yarn codama && yarn codama:format && yarn codama:check",

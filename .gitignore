@@ -7,3 +7,5 @@ test-ledger
 .yarn
 .surfpool
 .idea
+.playwright-cli
+output/playwright

@@ -1,0 +1,43 @@
+{
+  "name": "pcn-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": "^24.1.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
+    "test": "tsx --tsconfig tsconfig.app.json --test src/**/*.test.ts",
+    "prettier": "prettier --write .",
+    "prettier:check": "prettier . --check",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource-variable/newsreader": "^5.2.10",
+    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@solana/kit": "^6.8.0",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/wallet-adapter-base": "^0.9.27",
+    "@solana/wallet-adapter-react": "0.15.20",
+    "@solana/wallet-standard-wallet-adapter-react": "^1.1.4",
+    "@solana/web3.js": "^1.98.4",
+    "buffer": "^6.0.3",
+    "bs58": "^6.0.0",
+    "lucide-react": "^0.577.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.2",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "prettier": "^3.8.3",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.8"
+  }
+}
