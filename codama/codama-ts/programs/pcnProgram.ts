@@ -38,12 +38,15 @@ import {
   getClaimCodec,
   getConfigCodec,
   getEpochCodec,
+  getSolReserveCodec,
   type Claim,
   type ClaimArgs,
   type Config,
   type ConfigArgs,
   type Epoch,
   type EpochArgs,
+  type SolReserve,
+  type SolReserveArgs,
 } from "../accounts";
 import {
   getClaimRewardInstructionAsync,
@@ -89,6 +92,7 @@ export enum PcnProgramAccount {
   Claim,
   Config,
   Epoch,
+  SolReserve,
 }
 
 export function identifyPcnProgramAccount(
@@ -127,6 +131,17 @@ export function identifyPcnProgramAccount(
     )
   ) {
     return PcnProgramAccount.Epoch;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([78, 170, 214, 85, 103, 74, 70, 180])
+      ),
+      0
+    )
+  ) {
+    return PcnProgramAccount.SolReserve;
   }
   throw new SolanaError(
     SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_ACCOUNT,
@@ -337,6 +352,8 @@ export type PcnProgramPluginAccounts = {
     SelfFetchFunctions<ConfigArgs, Config>;
   epoch: ReturnType<typeof getEpochCodec> &
     SelfFetchFunctions<EpochArgs, Epoch>;
+  solReserve: ReturnType<typeof getSolReserveCodec> &
+    SelfFetchFunctions<SolReserveArgs, SolReserve>;
 };
 
 export type PcnProgramPluginInstructions = {
@@ -394,6 +411,7 @@ export function pcnProgramProgram() {
           claim: addSelfFetchFunctions(client, getClaimCodec()),
           config: addSelfFetchFunctions(client, getConfigCodec()),
           epoch: addSelfFetchFunctions(client, getEpochCodec()),
+          solReserve: addSelfFetchFunctions(client, getSolReserveCodec()),
         },
         instructions: {
           claimReward: (input) =>

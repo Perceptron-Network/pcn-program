@@ -8,7 +8,9 @@
 pub(crate) mod r#claim;
 pub(crate) mod r#config;
 pub(crate) mod r#epoch;
+pub(crate) mod r#sol_reserve;
 
 pub use self::r#claim::*;
 pub use self::r#config::*;
 pub use self::r#epoch::*;
+pub use self::r#sol_reserve::*;

@@ -9,3 +9,4 @@
 export * from "./claim";
 export * from "./config";
 export * from "./epoch";
+export * from "./solReserve";

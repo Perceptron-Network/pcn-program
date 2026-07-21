@@ -38,7 +38,11 @@ import {
   getAccountMetaFactory,
   type ResolvedInstructionAccount,
 } from "@solana/program-client-core";
-import { findConfigPda, findMintAuthorityPda } from "../pdas";
+import {
+  findConfigPda,
+  findMintAuthorityPda,
+  findSolReservePda,
+} from "../pdas";
 import { PCN_PROGRAM_PROGRAM_ADDRESS } from "../programs";
 
 export const FINALIZE_EPOCH_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
@@ -162,7 +166,7 @@ export type FinalizeEpochAsyncInput<
   epochTokenVault: Address<TAccountEpochTokenVault>;
   rewardMint: Address<TAccountRewardMint>;
   mintAuthority?: Address<TAccountMintAuthority>;
-  solReserve: Address<TAccountSolReserve>;
+  solReserve?: Address<TAccountSolReserve>;
   tokenProgram?: Address<TAccountTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
   totalRewardWeight: FinalizeEpochInstructionDataArgs["totalRewardWeight"];
@@ -239,6 +243,9 @@ export async function getFinalizeEpochInstructionAsync<
   }
   if (!accounts.mintAuthority.value) {
     accounts.mintAuthority.value = await findMintAuthorityPda();
+  }
+  if (!accounts.solReserve.value) {
+    accounts.solReserve.value = await findSolReservePda();
   }
   if (!accounts.tokenProgram.value) {
     accounts.tokenProgram.value =
