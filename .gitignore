@@ -7,3 +7,5 @@ test-ledger
 .yarn
 .surfpool
 .idea
+private-docs
+app/dist

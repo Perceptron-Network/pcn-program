@@ -1,6 +1,15 @@
 use anchor_lang::prelude::*;
 
-use crate::{error::PcnError, CurveParams, QUALITY_PPM_SCALE, TOKEN_BASE_UNITS};
+use crate::{
+    error::PcnError, CurveParams, EMISSION_MULTIPLIER_PPM_SCALE, QUALITY_PPM_SCALE,
+    TOKEN_BASE_UNITS,
+};
+
+const Q64_ONE: u128 = 1_u128 << 64;
+const Q64_HALF: u128 = Q64_ONE >> 1;
+const LN_2_Q64: u128 = 12_786_308_645_202_655_660;
+const EXP_TAYLOR_TERMS: u32 = 20;
+const EXP_SATURATION_HALVINGS: u128 = 64;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RewardPoolAmounts {
@@ -85,11 +94,23 @@ pub fn calculate_scarcity_cap(
     lifetime_curve_minted_amount: u64,
 ) -> Result<u64> {
     curve.validate()?;
-    let reward_weight_ratio = total_reward_weight as f64 / curve.saturation_units as f64;
-    let minted_history_ratio = lifetime_curve_minted_amount as f64 / curve.history_minted as f64;
-    let scarcity_base_units = curve.max_epoch_mint as f64 * (1.0 - libm::exp(-reward_weight_ratio))
-        / (1.0 + minted_history_ratio);
-    round_curve_base_units(scarcity_base_units)
+    let exponent_q64 = ratio_to_q64(total_reward_weight, curve.saturation_units)?;
+    let emission_factor_q64 = Q64_ONE
+        .checked_sub(exp_neg_q64(exponent_q64)?)
+        .ok_or(PcnError::MathOverflow)?;
+
+    let history_denominator = u128::from(curve.history_minted)
+        .checked_add(u128::from(lifetime_curve_minted_amount))
+        .ok_or(PcnError::MathOverflow)?;
+    let history_factor_q64 =
+        ratio_u128_to_q64(u128::from(curve.history_minted), history_denominator)?;
+    let emission_multiplier_q64 =
+        ratio_to_q64(curve.emission_multiplier_ppm, EMISSION_MULTIPLIER_PPM_SCALE)?;
+    let scarcity_factor_q64 = q64_mul(
+        q64_mul(emission_factor_q64, history_factor_q64)?,
+        emission_multiplier_q64,
+    )?;
+    q64_scale_u64_round(curve.max_epoch_mint, scarcity_factor_q64)
 }
 
 pub fn calculate_support_capacity(curve: CurveParams, support_budget_lamports: u64) -> Result<u64> {
@@ -123,21 +144,141 @@ fn ceil_div_u128(numerator: u128, denominator: u128) -> Result<u128> {
         .ok_or(PcnError::MathOverflow.into())
 }
 
-fn round_curve_base_units(amount: f64) -> Result<u64> {
-    let rounded_amount = amount.round();
-    if !rounded_amount.is_finite() || rounded_amount < 0.0 || rounded_amount > u64::MAX as f64 {
-        return Err(PcnError::MathOverflow.into());
+fn ratio_to_q64(numerator: u64, denominator: u64) -> Result<u128> {
+    ratio_u128_to_q64(u128::from(numerator), u128::from(denominator))
+}
+
+fn ratio_u128_to_q64(numerator: u128, denominator: u128) -> Result<u128> {
+    require!(denominator > 0, PcnError::MathOverflow);
+    let scaled = numerator.checked_shl(64).ok_or(PcnError::MathOverflow)?;
+    let rounded = scaled
+        .checked_add(denominator / 2)
+        .ok_or(PcnError::MathOverflow)?
+        .checked_div(denominator)
+        .ok_or(PcnError::MathOverflow)?;
+    Ok(rounded)
+}
+
+/// Returns `e^-x` in Q64.64. Inputs at or above `64 * ln(2)` saturate to zero,
+/// because their real result is below one Q64.64 unit.
+fn exp_neg_q64(exponent_q64: u128) -> Result<u128> {
+    let saturation = LN_2_Q64
+        .checked_mul(EXP_SATURATION_HALVINGS)
+        .ok_or(PcnError::MathOverflow)?;
+    if exponent_q64 >= saturation {
+        return Ok(0);
     }
-    Ok(rounded_amount as u64)
+
+    let halvings = exponent_q64
+        .checked_div(LN_2_Q64)
+        .ok_or(PcnError::MathOverflow)?;
+    let remainder = exponent_q64
+        .checked_sub(
+            halvings
+                .checked_mul(LN_2_Q64)
+                .ok_or(PcnError::MathOverflow)?,
+        )
+        .ok_or(PcnError::MathOverflow)?;
+
+    // Approximate e^remainder with a positive-term Taylor series, then take its
+    // reciprocal. Positive terms make the integer approximation monotonic;
+    // the alternating e^-x series can oscillate by one Q64 unit after rounding.
+    let mut exp_positive = Q64_ONE;
+    let mut term = Q64_ONE;
+    for order in 1..=EXP_TAYLOR_TERMS {
+        term = q64_mul_div_u32(term, remainder, order)?;
+        exp_positive = exp_positive
+            .checked_add(term)
+            .ok_or(PcnError::MathOverflow)?;
+        if term == 0 {
+            break;
+        }
+    }
+    let reduced_exp_neg = q64_reciprocal(exp_positive)?;
+
+    if halvings == 0 {
+        return Ok(reduced_exp_neg);
+    }
+    let shift = u32::try_from(halvings).map_err(|_| PcnError::MathOverflow)?;
+    let rounding = 1_u128
+        .checked_shl(shift - 1)
+        .ok_or(PcnError::MathOverflow)?;
+    reduced_exp_neg
+        .checked_add(rounding)
+        .ok_or(PcnError::MathOverflow)?
+        .checked_shr(shift)
+        .ok_or(PcnError::MathOverflow.into())
+}
+
+fn q64_reciprocal(value_q64: u128) -> Result<u128> {
+    require!(value_q64 >= Q64_ONE, PcnError::MathOverflow);
+    // Divide 2^128 by the Q64.64 denominator without materializing 2^128.
+    let quotient = u128::MAX
+        .checked_div(value_q64)
+        .ok_or(PcnError::MathOverflow)?;
+    let remainder_plus_one = u128::MAX
+        .checked_rem(value_q64)
+        .ok_or(PcnError::MathOverflow)?
+        .checked_add(1)
+        .ok_or(PcnError::MathOverflow)?;
+    let round_up = remainder_plus_one >= value_q64 - remainder_plus_one;
+    quotient
+        .checked_add(u128::from(round_up))
+        .ok_or(PcnError::MathOverflow.into())
+}
+
+fn q64_mul_div_u32(left: u128, right: u128, divisor: u32) -> Result<u128> {
+    let denominator = Q64_ONE
+        .checked_mul(u128::from(divisor))
+        .ok_or(PcnError::MathOverflow)?;
+    left.checked_mul(right)
+        .ok_or(PcnError::MathOverflow)?
+        .checked_add(denominator / 2)
+        .ok_or(PcnError::MathOverflow)?
+        .checked_div(denominator)
+        .ok_or(PcnError::MathOverflow.into())
+}
+
+fn q64_mul(left: u128, right: u128) -> Result<u128> {
+    require!(left <= Q64_ONE && right <= Q64_ONE, PcnError::MathOverflow);
+    if left == Q64_ONE {
+        return Ok(right);
+    }
+    if right == Q64_ONE {
+        return Ok(left);
+    }
+    left.checked_mul(right)
+        .ok_or(PcnError::MathOverflow)?
+        .checked_add(Q64_HALF)
+        .ok_or(PcnError::MathOverflow)?
+        .checked_div(Q64_ONE)
+        .ok_or(PcnError::MathOverflow.into())
+}
+
+fn q64_scale_u64_round(value: u64, factor_q64: u128) -> Result<u64> {
+    require!(factor_q64 <= Q64_ONE, PcnError::MathOverflow);
+    if factor_q64 == Q64_ONE {
+        return Ok(value);
+    }
+    let scaled = u128::from(value)
+        .checked_mul(factor_q64)
+        .ok_or(PcnError::MathOverflow)?
+        .checked_add(Q64_HALF)
+        .ok_or(PcnError::MathOverflow)?
+        .checked_div(Q64_ONE)
+        .ok_or(PcnError::MathOverflow)?;
+    u64::try_from(scaled).map_err(|_| PcnError::MathOverflow.into())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
 
     fn curve() -> CurveParams {
         CurveParams {
             max_epoch_mint: 1_000 * TOKEN_BASE_UNITS,
+            emission_multiplier_ppm: EMISSION_MULTIPLIER_PPM_SCALE,
             saturation_units: 10_000,
             history_minted: 10_000 * TOKEN_BASE_UNITS,
             target_support_lamports_per_token: 50_000_000,
@@ -154,6 +295,15 @@ mod tests {
         assert_eq!(compute_reward_weight(1_000, 500_000).unwrap(), 500);
         assert_eq!(compute_reward_weight(999, 333_333).unwrap(), 332);
         assert!(compute_reward_weight(1, QUALITY_PPM_SCALE + 1).is_err());
+    }
+
+    #[test]
+    fn canonical_composite_score_encodes_directly_as_reward_weight() {
+        let composite_score = 742_381;
+        assert_eq!(
+            compute_reward_weight(composite_score, QUALITY_PPM_SCALE).unwrap(),
+            composite_score
+        );
     }
 
     #[test]
@@ -178,6 +328,125 @@ mod tests {
         assert_eq!(low_history, 632_120_558_829);
         assert_eq!(high_history, 316_060_279_414);
         assert!(high_history < low_history);
+    }
+
+    #[test]
+    fn emission_multiplier_one_preserves_and_reduced_multiplier_scales_curve() {
+        let full = curve();
+        let full_cap = calculate_scarcity_cap(full, 10_000, 0).unwrap();
+        assert_eq!(full_cap, 632_120_558_829);
+
+        let reduced = CurveParams {
+            emission_multiplier_ppm: 500_000,
+            ..full
+        };
+        assert_eq!(
+            calculate_scarcity_cap(reduced, 10_000, 0).unwrap(),
+            316_060_279_414
+        );
+    }
+
+    #[test]
+    fn emission_multiplier_rejects_zero_and_above_one() {
+        let mut params = curve();
+        params.emission_multiplier_ppm = 0;
+        assert!(params.validate().is_err());
+        params.emission_multiplier_ppm = EMISSION_MULTIPLIER_PPM_SCALE + 1;
+        assert!(params.validate().is_err());
+    }
+
+    #[test]
+    fn scarcity_handles_boundaries_and_large_exponents() {
+        let mut params = curve();
+        assert_eq!(calculate_scarcity_cap(params, 0, 0).unwrap(), 0);
+        assert_eq!(
+            calculate_scarcity_cap(params, u64::MAX, 0).unwrap(),
+            params.max_epoch_mint
+        );
+
+        params.max_epoch_mint = u64::MAX;
+        params.saturation_units = 1;
+        params.history_minted = u64::MAX;
+        params.max_supply = u64::MAX;
+        assert_eq!(
+            calculate_scarcity_cap(params, u64::MAX, 0).unwrap(),
+            u64::MAX
+        );
+        assert!(calculate_scarcity_cap(params, u64::MAX, u64::MAX).unwrap() > 0);
+    }
+
+    #[test]
+    fn fixed_point_scarcity_matches_reference_samples() {
+        let params = curve();
+        for weight in [1, 10, 100, 1_000, 10_000, 100_000, u32::MAX as u64] {
+            for minted in [0, 1, params.history_minted, params.max_supply - 1] {
+                let actual = calculate_scarcity_cap(params, weight, minted).unwrap();
+                let expected = reference_scarcity(params, weight, minted);
+                assert!(
+                    actual.abs_diff(expected) <= 1,
+                    "weight={weight} minted={minted} actual={actual} expected={expected}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn scarcity_regression_is_monotonic_at_extreme_adjacent_weights() {
+        let params = CurveParams {
+            max_epoch_mint: 10_726_446_547_357_273_219,
+            emission_multiplier_ppm: 336_694,
+            saturation_units: 11_966_486_233_823_956_054,
+            history_minted: 2_385_622_954_990_824_523,
+            target_support_lamports_per_token: 273_555_157_196_043_699,
+            max_supply: 16_192_490_781_594_758_800,
+        };
+        let weight = 6_292_912_321_978_190_319;
+        let minted = 12_869_844_569_894_213_994;
+        let result = calculate_scarcity_cap(params, weight, minted).unwrap();
+        let increased = calculate_scarcity_cap(params, weight + 1, minted).unwrap();
+        assert!(increased >= result);
+    }
+
+    proptest! {
+        #[test]
+        fn scarcity_is_monotonic_and_close_to_reference(
+            max_epoch_mint in 1_u64..1_000_000_000_000_000,
+            saturation_units in 1_u64..1_000_000_000_000,
+            history_minted in 1_u64..1_000_000_000_000_000,
+            first_weight in 0_u64..1_000_000_000_000,
+            extra_weight in 0_u64..1_000_000_000_000,
+            first_minted in 0_u64..1_000_000_000_000_000,
+            extra_minted in 0_u64..1_000_000_000_000_000,
+        ) {
+            let params = CurveParams {
+                max_epoch_mint,
+                emission_multiplier_ppm: EMISSION_MULTIPLIER_PPM_SCALE,
+                saturation_units,
+                history_minted,
+                target_support_lamports_per_token: 1,
+                max_supply: u64::MAX,
+            };
+            let second_weight = first_weight.saturating_add(extra_weight);
+            let second_minted = first_minted.saturating_add(extra_minted);
+            let base = calculate_scarcity_cap(params, first_weight, first_minted).unwrap();
+            let more_work = calculate_scarcity_cap(params, second_weight, first_minted).unwrap();
+            let more_history = calculate_scarcity_cap(params, first_weight, second_minted).unwrap();
+            prop_assert!(more_work >= base);
+            prop_assert!(more_history <= base);
+
+            let reference = reference_scarcity(params, first_weight, first_minted);
+            prop_assert!(base.abs_diff(reference) <= 2);
+        }
+    }
+
+    fn reference_scarcity(curve: CurveParams, weight: u64, minted: u64) -> u64 {
+        let work_ratio = weight as f64 / curve.saturation_units as f64;
+        let history_ratio = minted as f64 / curve.history_minted as f64;
+        (curve.max_epoch_mint as f64
+            * (curve.emission_multiplier_ppm as f64 / EMISSION_MULTIPLIER_PPM_SCALE as f64)
+            * (1.0 - (-work_ratio).exp())
+            / (1.0 + history_ratio))
+            .round() as u64
     }
 
     #[test]

@@ -23,10 +23,12 @@ custom-panic = []
 [dependencies]
 anchor-lang = "1.0.2"
 anchor-spl = "1.0.2"
-libm = "0.2"
 
 [dev-dependencies]
+bincode = "1"
 litesvm = "0.10.0"
+proptest = "1"
+rand = "0.8"
 solana-message = "3.0.1"
 solana-transaction = "3.0.2"
 solana-signer = "3.0.0"
