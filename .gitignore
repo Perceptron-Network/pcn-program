@@ -9,3 +9,4 @@ test-ledger
 .idea
 .playwright-cli
 output/playwright
+private-docs
