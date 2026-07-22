@@ -71,6 +71,31 @@ fn update_config_rejects_invalid_curve_and_supply_regression_in_litesvm() {
     )
     .is_err());
 
+    invalid_curve = ctx.curve;
+    invalid_curve.emission_multiplier_ppm = 0;
+    assert!(update_config_result(
+        &mut ctx,
+        &admin,
+        pcn_program::UpdateConfigArgs {
+            oracle: None,
+            claim_window_slots: None,
+            curve: Some(invalid_curve),
+        },
+    )
+    .is_err());
+
+    invalid_curve.emission_multiplier_ppm = pcn_program::EMISSION_MULTIPLIER_PPM_SCALE + 1;
+    assert!(update_config_result(
+        &mut ctx,
+        &admin,
+        pcn_program::UpdateConfigArgs {
+            oracle: None,
+            claim_window_slots: None,
+            curve: Some(invalid_curve),
+        },
+    )
+    .is_err());
+
     let epoch = create_epoch_fixture(&mut ctx, 1);
     open_epoch(&mut ctx, &epoch, 10_000_000);
     ctx.svm.warp_to_slot(2);
@@ -88,6 +113,31 @@ fn update_config_rejects_invalid_curve_and_supply_regression_in_litesvm() {
         },
     )
     .is_err());
+}
+
+#[test]
+fn admin_can_update_emission_multiplier_in_litesvm() {
+    let Some(mut ctx) = setup_pcn_litesvm() else {
+        eprintln!("skipping LiteSVM test; run `anchor test` first");
+        return;
+    };
+    let admin = clone_keypair(&ctx.admin);
+    let mut reduced_curve = ctx.curve;
+    reduced_curve.emission_multiplier_ppm = 500_000;
+
+    assert!(update_config_result(
+        &mut ctx,
+        &admin,
+        pcn_program::UpdateConfigArgs {
+            oracle: None,
+            claim_window_slots: None,
+            curve: Some(reduced_curve),
+        },
+    )
+    .is_ok());
+
+    let config: pcn_program::Config = get_anchor_account(&ctx.svm, &ctx.config);
+    assert_eq!(config.curve.emission_multiplier_ppm, 500_000);
 }
 
 fn clone_keypair(keypair: &solana_keypair::Keypair) -> solana_keypair::Keypair {
