@@ -2,7 +2,12 @@
 
 use {
     anchor_lang::{
-        solana_program::{instruction::Instruction, system_instruction, sysvar::SysvarId},
+        solana_program::{
+            bpf_loader_upgradeable::{self, UpgradeableLoaderState},
+            instruction::Instruction,
+            system_instruction,
+            sysvar::SysvarId,
+        },
         AccountDeserialize, InstructionData, ToAccountMetas,
     },
     anchor_spl::token::{
@@ -41,7 +46,17 @@ pub struct EpochFixture {
 }
 
 pub fn setup_pcn_litesvm() -> Option<PcnTestContext> {
-    let so_path = program_so_path()?;
+    let mut ctx = setup_uninitialized_pcn_litesvm();
+    initialize_config_result(&mut ctx, program_data_address()).unwrap();
+    Some(ctx)
+}
+
+pub fn setup_uninitialized_pcn_litesvm() -> PcnTestContext {
+    let so_path = program_so_path().unwrap_or_else(|| {
+        panic!(
+            "missing target/deploy/pcn_program.so; run `NO_DNA=1 anchor build` before `cargo test`"
+        )
+    });
     let program_id = pcn_program::id();
     let payer = Keypair::new();
     let admin = Keypair::new();
@@ -50,6 +65,7 @@ pub fn setup_pcn_litesvm() -> Option<PcnTestContext> {
     let mut svm = LiteSVM::new();
     let bytes = std::fs::read(so_path).unwrap();
     svm.add_program(program_id, &bytes).unwrap();
+    set_program_upgrade_authority(&mut svm, payer.pubkey());
     svm.airdrop(&payer.pubkey(), 10_000_000_000).unwrap();
 
     let config = pda(&[pcn_program::CONFIG_SEED]);
@@ -58,33 +74,7 @@ pub fn setup_pcn_litesvm() -> Option<PcnTestContext> {
     let token_reserve_vault = pda(&[pcn_program::TOKEN_RESERVE_SEED]);
     let curve = test_curve();
 
-    let init_ix = Instruction::new_with_bytes(
-        program_id,
-        &pcn_program::instruction::InitializeConfig {
-            args: pcn_program::InitializeConfigArgs {
-                admin: admin.pubkey(),
-                oracle: oracle.pubkey(),
-                claim_window_slots: 5,
-                curve,
-            },
-        }
-        .data(),
-        pcn_program::accounts::InitializeConfig {
-            payer: payer.pubkey(),
-            config,
-            reward_mint: mint.pubkey(),
-            mint_authority,
-            sol_reserve,
-            token_reserve_vault,
-            system_program: anchor_lang::system_program::ID,
-            token_program: spl_token::ID,
-            rent: anchor_lang::prelude::Rent::id(),
-        }
-        .to_account_metas(None),
-    );
-    send(&mut svm, &payer, vec![init_ix], &[&payer, &mint]);
-
-    Some(PcnTestContext {
+    PcnTestContext {
         svm,
         payer,
         admin,
@@ -95,7 +85,83 @@ pub fn setup_pcn_litesvm() -> Option<PcnTestContext> {
         sol_reserve,
         token_reserve_vault,
         curve,
-    })
+    }
+}
+
+fn initialize_config_result(
+    ctx: &mut PcnTestContext,
+    program_data: anchor_lang::prelude::Pubkey,
+) -> TransactionResult {
+    let init_ix = Instruction::new_with_bytes(
+        pcn_program::id(),
+        &pcn_program::instruction::InitializeConfig {
+            args: pcn_program::InitializeConfigArgs {
+                admin: ctx.admin.pubkey(),
+                oracle: ctx.oracle.pubkey(),
+                claim_window_slots: 5,
+                curve: ctx.curve,
+            },
+        }
+        .data(),
+        pcn_program::accounts::InitializeConfig {
+            payer: ctx.payer.pubkey(),
+            program: pcn_program::id(),
+            program_data,
+            config: ctx.config,
+            reward_mint: ctx.mint.pubkey(),
+            mint_authority: ctx.mint_authority,
+            sol_reserve: ctx.sol_reserve,
+            token_reserve_vault: ctx.token_reserve_vault,
+            system_program: anchor_lang::system_program::ID,
+            token_program: spl_token::ID,
+            rent: anchor_lang::prelude::Rent::id(),
+        }
+        .to_account_metas(None),
+    );
+    send_result(
+        &mut ctx.svm,
+        &ctx.payer,
+        vec![init_ix],
+        &[&ctx.payer, &ctx.mint],
+    )
+}
+
+fn set_program_upgrade_authority(
+    svm: &mut LiteSVM,
+    upgrade_authority: anchor_lang::prelude::Pubkey,
+) {
+    let address = program_data_address();
+    let mut account = svm.get_account(&address).unwrap();
+    let metadata_len = UpgradeableLoaderState::size_of_programdata_metadata();
+    bincode::serialize_into(
+        &mut account.data[..metadata_len],
+        &UpgradeableLoaderState::ProgramData {
+            slot: 0,
+            upgrade_authority_address: Some(upgrade_authority),
+        },
+    )
+    .unwrap();
+    svm.set_account(address, account).unwrap();
+}
+
+fn program_data_address() -> anchor_lang::prelude::Pubkey {
+    anchor_lang::prelude::Pubkey::find_program_address(
+        &[pcn_program::id().as_ref()],
+        &bpf_loader_upgradeable::ID,
+    )
+    .0
+}
+
+pub fn initialize_config_with_unrelated_program_data(
+    ctx: &mut PcnTestContext,
+) -> TransactionResult {
+    let unrelated_program_data = anchor_lang::prelude::Pubkey::new_unique();
+    let canonical_program_data = ctx.svm.get_account(&program_data_address()).unwrap();
+    ctx.svm
+        .set_account(unrelated_program_data, canonical_program_data)
+        .unwrap();
+
+    initialize_config_result(ctx, unrelated_program_data)
 }
 
 pub fn create_epoch_fixture(ctx: &mut PcnTestContext, epoch_id: u64) -> EpochFixture {

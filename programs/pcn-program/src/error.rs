@@ -2,6 +2,10 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum PcnError {
+    #[msg("Only the program upgrade authority may initialize the config")]
+    UnauthorizedInitializer,
+    #[msg("ProgramData does not belong to this program")]
+    InvalidProgramData,
     #[msg("Only the configured admin may perform this action")]
     UnauthorizedAdmin,
     #[msg("Only the configured oracle may perform this action")]

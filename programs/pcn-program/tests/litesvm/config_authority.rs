@@ -4,6 +4,18 @@ mod harness;
 use harness::*;
 
 #[test]
+fn initialize_config_rejects_unrelated_program_data_in_litesvm() {
+    let mut ctx = setup_uninitialized_pcn_litesvm();
+
+    let result = initialize_config_with_unrelated_program_data(&mut ctx);
+    let error = format!("{:?}", result.unwrap_err());
+    assert!(
+        error.contains("Custom(6001)"),
+        "expected InvalidProgramData (6001), got {error}"
+    );
+}
+
+#[test]
 fn update_config_requires_admin_in_litesvm() {
     let Some(mut ctx) = setup_pcn_litesvm() else {
         eprintln!("skipping LiteSVM test; run `anchor test` first");
