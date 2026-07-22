@@ -15,6 +15,7 @@ fn scarcity_fuzz() {
     while Instant::now() < deadline {
         let params = CurveParams {
             max_epoch_mint: nonzero(OsRng.next_u64()),
+            emission_multiplier_ppm: 1 + OsRng.next_u64() % 1_000_000,
             saturation_units: nonzero(OsRng.next_u64()),
             history_minted: nonzero(OsRng.next_u64()),
             target_support_lamports_per_token: nonzero(OsRng.next_u64()),

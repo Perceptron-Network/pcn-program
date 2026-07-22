@@ -1,6 +1,9 @@
 use anchor_lang::prelude::*;
 
-use crate::{error::PcnError, CurveParams, QUALITY_PPM_SCALE, TOKEN_BASE_UNITS};
+use crate::{
+    error::PcnError, CurveParams, EMISSION_MULTIPLIER_PPM_SCALE, QUALITY_PPM_SCALE,
+    TOKEN_BASE_UNITS,
+};
 
 const Q64_ONE: u128 = 1_u128 << 64;
 const Q64_HALF: u128 = Q64_ONE >> 1;
@@ -101,7 +104,12 @@ pub fn calculate_scarcity_cap(
         .ok_or(PcnError::MathOverflow)?;
     let history_factor_q64 =
         ratio_u128_to_q64(u128::from(curve.history_minted), history_denominator)?;
-    let scarcity_factor_q64 = q64_mul(emission_factor_q64, history_factor_q64)?;
+    let emission_multiplier_q64 =
+        ratio_to_q64(curve.emission_multiplier_ppm, EMISSION_MULTIPLIER_PPM_SCALE)?;
+    let scarcity_factor_q64 = q64_mul(
+        q64_mul(emission_factor_q64, history_factor_q64)?,
+        emission_multiplier_q64,
+    )?;
     q64_scale_u64_round(curve.max_epoch_mint, scarcity_factor_q64)
 }
 
@@ -270,6 +278,7 @@ mod tests {
     fn curve() -> CurveParams {
         CurveParams {
             max_epoch_mint: 1_000 * TOKEN_BASE_UNITS,
+            emission_multiplier_ppm: EMISSION_MULTIPLIER_PPM_SCALE,
             saturation_units: 10_000,
             history_minted: 10_000 * TOKEN_BASE_UNITS,
             target_support_lamports_per_token: 50_000_000,
@@ -286,6 +295,15 @@ mod tests {
         assert_eq!(compute_reward_weight(1_000, 500_000).unwrap(), 500);
         assert_eq!(compute_reward_weight(999, 333_333).unwrap(), 332);
         assert!(compute_reward_weight(1, QUALITY_PPM_SCALE + 1).is_err());
+    }
+
+    #[test]
+    fn canonical_composite_score_encodes_directly_as_reward_weight() {
+        let composite_score = 742_381;
+        assert_eq!(
+            compute_reward_weight(composite_score, QUALITY_PPM_SCALE).unwrap(),
+            composite_score
+        );
     }
 
     #[test]
@@ -310,6 +328,31 @@ mod tests {
         assert_eq!(low_history, 632_120_558_829);
         assert_eq!(high_history, 316_060_279_414);
         assert!(high_history < low_history);
+    }
+
+    #[test]
+    fn emission_multiplier_one_preserves_and_reduced_multiplier_scales_curve() {
+        let full = curve();
+        let full_cap = calculate_scarcity_cap(full, 10_000, 0).unwrap();
+        assert_eq!(full_cap, 632_120_558_829);
+
+        let reduced = CurveParams {
+            emission_multiplier_ppm: 500_000,
+            ..full
+        };
+        assert_eq!(
+            calculate_scarcity_cap(reduced, 10_000, 0).unwrap(),
+            316_060_279_414
+        );
+    }
+
+    #[test]
+    fn emission_multiplier_rejects_zero_and_above_one() {
+        let mut params = curve();
+        params.emission_multiplier_ppm = 0;
+        assert!(params.validate().is_err());
+        params.emission_multiplier_ppm = EMISSION_MULTIPLIER_PPM_SCALE + 1;
+        assert!(params.validate().is_err());
     }
 
     #[test]
@@ -351,6 +394,7 @@ mod tests {
     fn scarcity_regression_is_monotonic_at_extreme_adjacent_weights() {
         let params = CurveParams {
             max_epoch_mint: 10_726_446_547_357_273_219,
+            emission_multiplier_ppm: 336_694,
             saturation_units: 11_966_486_233_823_956_054,
             history_minted: 2_385_622_954_990_824_523,
             target_support_lamports_per_token: 273_555_157_196_043_699,
@@ -376,6 +420,7 @@ mod tests {
         ) {
             let params = CurveParams {
                 max_epoch_mint,
+                emission_multiplier_ppm: EMISSION_MULTIPLIER_PPM_SCALE,
                 saturation_units,
                 history_minted,
                 target_support_lamports_per_token: 1,
@@ -397,8 +442,11 @@ mod tests {
     fn reference_scarcity(curve: CurveParams, weight: u64, minted: u64) -> u64 {
         let work_ratio = weight as f64 / curve.saturation_units as f64;
         let history_ratio = minted as f64 / curve.history_minted as f64;
-        (curve.max_epoch_mint as f64 * (1.0 - (-work_ratio).exp()) / (1.0 + history_ratio)).round()
-            as u64
+        (curve.max_epoch_mint as f64
+            * (curve.emission_multiplier_ppm as f64 / EMISSION_MULTIPLIER_PPM_SCALE as f64)
+            * (1.0 - (-work_ratio).exp())
+            / (1.0 + history_ratio))
+            .round() as u64
     }
 
     #[test]

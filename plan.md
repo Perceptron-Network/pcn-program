@@ -45,6 +45,11 @@ Reward weight is:
 reward_weight = floor(bandwidth_units * quality_factor_ppm / QUALITY_PPM_SCALE)
 ```
 
+The canonical oracle encoding for the whitepaper composite performance score is
+to submit the final scaled off-chain score as `bandwidth_units` and set
+`quality_factor_ppm = 1_000_000`. This preserves the score exactly as the
+on-chain reward weight without implementing the component scoring model on-chain.
+
 Use checked integer arithmetic everywhere. Use `u128` for intermediate multiplication and division. Reject overflow rather than saturating.
 
 ## Cargo Dependency
@@ -95,6 +100,7 @@ pub struct Config {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CurveParams {
     pub max_epoch_mint: u64,
+    pub emission_multiplier_ppm: u64,
     pub saturation_units: u64,
     pub history_minted: u64,
     pub target_support_lamports_per_token: u64,
@@ -105,6 +111,7 @@ pub struct CurveParams {
 Validation:
 
 - `max_epoch_mint > 0`
+- `1 <= emission_multiplier_ppm <= 1_000_000`
 - `saturation_units > 0`
 - `history_minted > 0`
 - `target_support_lamports_per_token > 0`
@@ -695,6 +702,8 @@ pub enum PcnError {
 Add pure Rust tests for math helpers:
 
 - Scarcity result increases with `total_reward_weight`.
+- `emission_multiplier_ppm = 1_000_000` preserves the full curve and lower
+  values proportionally reduce it before support and remaining-supply caps.
 - Scarcity approaches `max_epoch_mint` as weight grows when lifetime minted is zero.
 - Scarcity is reduced as `lifetime_curve_minted_amount / history_minted` grows.
 - Support cap computes `support_budget_lamports * TOKEN_BASE_UNITS / target_support_lamports_per_token`.

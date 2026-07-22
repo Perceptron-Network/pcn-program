@@ -44,6 +44,7 @@ describe("pcn-program", () => {
   const tokenReserveVault = pda(["token_reserve"]);
   const curve = {
     maxEpochMint: new BN(TOKEN_BASE_UNITS),
+    emissionMultiplierPpm: new BN(1_000_000),
     saturationUnits: new BN(100),
     historyMinted: new BN(TOKEN_BASE_UNITS),
     targetSupportLamportsPerToken: new BN(10_000_000),

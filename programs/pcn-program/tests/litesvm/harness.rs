@@ -532,6 +532,7 @@ fn program_so_path() -> Option<PathBuf> {
 fn test_curve() -> pcn_program::CurveParams {
     pcn_program::CurveParams {
         max_epoch_mint: pcn_program::TOKEN_BASE_UNITS,
+        emission_multiplier_ppm: pcn_program::EMISSION_MULTIPLIER_PPM_SCALE,
         saturation_units: 100,
         history_minted: pcn_program::TOKEN_BASE_UNITS,
         target_support_lamports_per_token: 10_000_000,

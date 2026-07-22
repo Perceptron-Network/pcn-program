@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::error::PcnError;
+use crate::{error::PcnError, EMISSION_MULTIPLIER_PPM_SCALE};
 
 #[account]
 #[derive(Debug, InitSpace)]
@@ -26,6 +26,7 @@ impl Config {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq, InitSpace)]
 pub struct CurveParams {
     pub max_epoch_mint: u64,
+    pub emission_multiplier_ppm: u64,
     pub saturation_units: u64,
     pub history_minted: u64,
     pub target_support_lamports_per_token: u64,
@@ -52,6 +53,7 @@ mod tests {
             claim_window_slots: u64::MAX,
             curve: CurveParams {
                 max_epoch_mint: u64::MAX,
+                emission_multiplier_ppm: EMISSION_MULTIPLIER_PPM_SCALE,
                 saturation_units: u64::MAX,
                 history_minted: u64::MAX,
                 target_support_lamports_per_token: u64::MAX,
@@ -75,6 +77,8 @@ impl CurveParams {
     pub fn validate(&self) -> Result<()> {
         require!(
             self.max_epoch_mint > 0
+                && self.emission_multiplier_ppm > 0
+                && self.emission_multiplier_ppm <= EMISSION_MULTIPLIER_PPM_SCALE
                 && self.saturation_units > 0
                 && self.history_minted > 0
                 && self.target_support_lamports_per_token > 0
