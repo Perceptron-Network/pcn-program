@@ -4,6 +4,19 @@ mod harness;
 use harness::*;
 
 #[test]
+fn initialize_config_creates_program_owned_sol_reserve_in_litesvm() {
+    let Some(ctx) = setup_pcn_litesvm() else {
+        eprintln!("skipping LiteSVM test; run `anchor test` first");
+        return;
+    };
+
+    let reserve = ctx.svm.get_account(&ctx.sol_reserve).unwrap();
+    assert_eq!(reserve.owner, pcn_program::id());
+    assert_eq!(reserve.data.len(), pcn_program::SolReserve::LEN);
+    let _: pcn_program::SolReserve = get_anchor_account(&ctx.svm, &ctx.sol_reserve);
+}
+
+#[test]
 fn update_config_requires_admin_in_litesvm() {
     let Some(mut ctx) = setup_pcn_litesvm() else {
         eprintln!("skipping LiteSVM test; run `anchor test` first");

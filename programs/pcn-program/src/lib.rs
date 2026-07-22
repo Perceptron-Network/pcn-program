@@ -14,7 +14,7 @@ pub use instructions::*;
 pub use rewards::*;
 pub use state::*;
 
-declare_id!("FzHRzKNFB7Mck5FHj2MXUaywAgtB2EA2EeEQEkp59Xfo");
+declare_id!("86oGodFG8DfLYHAgYwUPCNQzaods7Auxz9cnU7XzWipt");
 
 #[program]
 pub mod pcn_program {

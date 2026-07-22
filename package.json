@@ -1,22 +1,39 @@
 {
   "license": "ISC",
   "scripts": {
+    "app:dev": "yarn --cwd app dev",
+    "app:build": "yarn --cwd app build",
+    "app:test": "yarn --cwd app test",
     "test": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts",
     "test:ts": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts",
+    "gen-clients": "CODAMA_POST_BUILD_SKIP=1 NO_DNA=1 anchor build && yarn codama && yarn codama:format && yarn codama:check",
+    "codama": "tsx scripts/gen-client.ts target/idl/pcn_program.json codama/codama-rust codama/codama-ts",
+    "codama:post-build": "bash scripts/post-anchor-build-codama.sh",
+    "codama:format": "bash scripts/format-codama.sh",
+    "codama:check": "bash scripts/check-codama-drift.sh",
+    "typecheck:codama": "tsc --noEmit -p tsconfig.codama.json",
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
   },
   "dependencies": {
-    "@anchor-lang/core": "^1.0.2"
+    "@anchor-lang/core": "^1.0.2",
+    "@solana/kit": "^6.8.0",
+    "@solana/program-client-core": "^6.8.0"
   },
   "devDependencies": {
-    "chai": "^4.3.4",
-    "mocha": "^9.0.3",
-    "ts-mocha": "^10.0.0",
+    "@codama/nodes-from-anchor": "^1.4.1",
+    "@codama/renderers-js": "^2.2.0",
+    "@codama/renderers-rust": "^3.1.0",
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.0.0",
-    "typescript": "^5.7.3",
-    "prettier": "^2.6.2"
+    "@types/node": "^24.10.0",
+    "chai": "^4.3.4",
+    "codama": "^1.6.0",
+    "mocha": "^9.0.3",
+    "prettier": "^2.6.2",
+    "ts-mocha": "^10.0.0",
+    "tsx": "^4.22.3",
+    "typescript": "^5.7.3"
   }
 }

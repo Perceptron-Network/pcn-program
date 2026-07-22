@@ -2,8 +2,8 @@ use anchor_lang::{prelude::*, solana_program::program_option::COption};
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::{
-    error::PcnError, program::PcnProgram, Config, CurveParams, CONFIG_SEED, MINT_AUTHORITY_SEED,
-    SOL_RESERVE_SEED, TOKEN_DECIMALS, TOKEN_RESERVE_SEED,
+    error::PcnError, program::PcnProgram, Config, CurveParams, SolReserve, CONFIG_SEED,
+    MINT_AUTHORITY_SEED, SOL_RESERVE_SEED, TOKEN_DECIMALS, TOKEN_RESERVE_SEED,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -73,16 +73,14 @@ pub struct InitializeConfig<'info> {
     /// CHECK: PDA signer only; no data is read.
     #[account(seeds = [MINT_AUTHORITY_SEED], bump)]
     pub mint_authority: UncheckedAccount<'info>,
-    /// CHECK: Zero-data system-owned PDA used only as a SOL reserve.
     #[account(
         init,
         payer = payer,
         seeds = [SOL_RESERVE_SEED],
         bump,
-        space = 0,
-        owner = system_program.key()
+        space = SolReserve::LEN
     )]
-    pub sol_reserve: UncheckedAccount<'info>,
+    pub sol_reserve: Account<'info, SolReserve>,
     #[account(
         init,
         payer = payer,

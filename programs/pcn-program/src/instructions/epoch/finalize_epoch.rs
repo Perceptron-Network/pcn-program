@@ -2,8 +2,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 
 use crate::{
-    compute_reward_pool, error::PcnError, Config, Epoch, EpochStatus, CONFIG_SEED, EPOCH_SEED,
-    MINT_AUTHORITY_SEED,
+    compute_reward_pool, error::PcnError, Config, Epoch, EpochStatus, SolReserve, CONFIG_SEED,
+    EPOCH_SEED, MINT_AUTHORITY_SEED, SOL_RESERVE_SEED,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -113,9 +113,13 @@ pub struct FinalizeEpoch<'info> {
     /// CHECK: PDA signer only; no data is read.
     #[account(seeds = [MINT_AUTHORITY_SEED], bump = config.mint_authority_bump)]
     pub mint_authority: UncheckedAccount<'info>,
-    /// CHECK: Address is pinned in config and only receives lamports in v1.
-    #[account(mut, address = config.sol_reserve)]
-    pub sol_reserve: UncheckedAccount<'info>,
+    #[account(
+        mut,
+        seeds = [SOL_RESERVE_SEED],
+        bump = config.sol_reserve_bump,
+        address = config.sol_reserve
+    )]
+    pub sol_reserve: Account<'info, SolReserve>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }

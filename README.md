@@ -64,3 +64,22 @@ yarn test:ts
 ```
 
 Use `cargo test` for Rust unit and LiteSVM tests. Use `anchor test` when checking the full Anchor/TypeScript flow.
+
+## Web app
+
+The Vite/React interface lives in `app/` and consumes the generated Codama
+TypeScript client directly. Start it with `yarn app:dev`; see `app/README.md` for
+local-validator and read-only preview setup.
+
+## Generated clients
+
+The Anchor IDL is the source of truth for checked-in Codama clients:
+
+- Rust: `codama/codama-rust`
+- TypeScript: `codama/codama-ts`
+
+Run `yarn gen-clients` after changing the program interface. It rebuilds the
+IDL, regenerates and formats both clients, and verifies that a second generation
+produces no drift. `anchor build` runs the same generation check through its
+post-build hook; set `CODAMA_POST_BUILD_SKIP=1` only when a surrounding command
+will regenerate the clients itself.

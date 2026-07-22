@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-pcn_program = "FzHRzKNFB7Mck5FHj2MXUaywAgtB2EA2EeEQEkp59Xfo"
+pcn_program = "86oGodFG8DfLYHAgYwUPCNQzaods7Auxz9cnU7XzWipt"
 
 [provider]
 cluster = "localnet"
@@ -16,3 +16,4 @@ wallet = "~/.config/solana/id.json"
 test = "yarn test:ts && cargo test"
 
 [hooks]
+post_build = "yarn codama:post-build"

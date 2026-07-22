@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "types": ["node"],
+    "lib": ["es2022", "dom"],
+    "module": "esnext",
+    "target": "es2022",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["codama/codama-ts/**/*", "scripts/gen-client.ts"]
+}
