@@ -86,7 +86,6 @@ describe("pcn-program", () => {
           tokenReserveVault,
           systemProgram: web3.SystemProgram.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
-          rent: web3.SYSVAR_RENT_PUBKEY,
         })
         .signers([unauthorizedPayer, mint])
         .rpc(),
@@ -112,7 +111,6 @@ describe("pcn-program", () => {
           tokenReserveVault,
           systemProgram: web3.SystemProgram.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
-          rent: web3.SYSVAR_RENT_PUBKEY,
         })
         .signers([mint])
         .rpc(),
@@ -137,7 +135,6 @@ describe("pcn-program", () => {
         tokenReserveVault,
         systemProgram: web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
-        rent: web3.SYSVAR_RENT_PUBKEY,
       })
       .signers([mint])
       .rpc();
@@ -339,7 +336,6 @@ describe("pcn-program", () => {
         rewardMint: mint.publicKey,
         systemProgram: web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
-        rent: web3.SYSVAR_RENT_PUBKEY,
       })
       .signers([oracle])
       .rpc();

@@ -6,7 +6,6 @@ use {
             bpf_loader_upgradeable::{self, UpgradeableLoaderState},
             instruction::Instruction,
             system_instruction,
-            sysvar::SysvarId,
         },
         AccountDeserialize, InstructionData, ToAccountMetas,
     },
@@ -114,7 +113,6 @@ fn initialize_config_result(
             token_reserve_vault: ctx.token_reserve_vault,
             system_program: anchor_lang::system_program::ID,
             token_program: spl_token::ID,
-            rent: anchor_lang::prelude::Rent::id(),
         }
         .to_account_metas(None),
     );
@@ -398,7 +396,6 @@ fn open_epoch_ix(
             reward_mint: ctx.mint.pubkey(),
             system_program: anchor_lang::system_program::ID,
             token_program: spl_token::ID,
-            rent: anchor_lang::prelude::Rent::id(),
         }
         .to_account_metas(None),
     )
