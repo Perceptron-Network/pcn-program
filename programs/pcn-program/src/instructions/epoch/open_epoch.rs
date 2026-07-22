@@ -95,5 +95,4 @@ pub struct OpenEpoch<'info> {
     pub reward_mint: Account<'info, Mint>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
-    pub rent: Sysvar<'info, Rent>,
 }
