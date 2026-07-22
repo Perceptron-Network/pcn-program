@@ -7,7 +7,7 @@ The program mints PCN tokens to users based on bandwidth measurements submitted 
 ## How It Works
 
 1. **Initialize config**
-   - An admin creates the program config.
+   - The program upgrade authority creates the program config and selects the admin.
    - The program creates a 9-decimal SPL reward mint, a mint-authority PDA, a SOL reserve, and a token reserve vault.
 
 2. **Open an epoch**
@@ -40,6 +40,19 @@ The program mints PCN tokens to users based on bandwidth measurements submitted 
 - `Config`: admin, oracle, reward mint, reserves, claim window, and curve parameters.
 - `Epoch`: epoch status, SOL budget, reward pool, claim deadline, and token vault.
 - `Claim`: one user reward record for one epoch.
+
+## Emission Multiplier And Oracle Score Encoding
+
+`CurveParams.emission_multiplier_ppm` is the protocol-set `R` term in the
+scarcity curve. It must be between `1` and `1_000_000`; `1_000_000` means
+`R = 1`. The existing admin may update it by submitting a complete validated
+curve through `update_config`.
+
+Performance scoring remains off-chain. The oracle computes the final scaled
+composite score from the approved uptime, bandwidth, fulfilment, and quest
+inputs, then submits that score as `bandwidth_units` with
+`quality_factor_ppm = 1_000_000`. With this canonical encoding, the on-chain
+`reward_weight` equals the submitted composite score exactly.
 
 ## Key Commands
 

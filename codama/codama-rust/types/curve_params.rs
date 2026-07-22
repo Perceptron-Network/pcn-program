@@ -11,6 +11,7 @@ use borsh::BorshSerialize;
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 pub struct CurveParams {
     pub max_epoch_mint: u64,
+    pub emission_multiplier_ppm: u64,
     pub saturation_units: u64,
     pub history_minted: u64,
     pub target_support_lamports_per_token: u64,

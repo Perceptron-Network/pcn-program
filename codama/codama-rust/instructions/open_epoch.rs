@@ -30,8 +30,6 @@ pub struct OpenEpoch {
     pub system_program: solana_address::Address,
 
     pub token_program: solana_address::Address,
-
-    pub rent: solana_address::Address,
 }
 
 impl OpenEpoch {
@@ -45,7 +43,7 @@ impl OpenEpoch {
         args: OpenEpochInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.oracle,
             true,
@@ -75,9 +73,6 @@ impl OpenEpoch {
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
-        ));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.rent, false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let mut data = OpenEpochInstructionData::new().try_to_vec().unwrap();
@@ -142,7 +137,6 @@ impl OpenEpochInstructionArgs {
 ///   6. `[]` reward_mint
 ///   7. `[optional]` system_program (default to `11111111111111111111111111111111`)
 ///   8. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
-///   9. `[optional]` rent (default to `SysvarRent111111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct OpenEpochBuilder {
     oracle: Option<solana_address::Address>,
@@ -154,7 +148,6 @@ pub struct OpenEpochBuilder {
     reward_mint: Option<solana_address::Address>,
     system_program: Option<solana_address::Address>,
     token_program: Option<solana_address::Address>,
-    rent: Option<solana_address::Address>,
     epoch_id: Option<u64>,
     start_slot: Option<u64>,
     end_slot: Option<u64>,
@@ -213,12 +206,6 @@ impl OpenEpochBuilder {
         self.token_program = Some(token_program);
         self
     }
-    /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
-    #[inline(always)]
-    pub fn rent(&mut self, rent: solana_address::Address) -> &mut Self {
-        self.rent = Some(rent);
-        self
-    }
     #[inline(always)]
     pub fn epoch_id(&mut self, epoch_id: u64) -> &mut Self {
         self.epoch_id = Some(epoch_id);
@@ -272,9 +259,6 @@ impl OpenEpochBuilder {
             token_program: self.token_program.unwrap_or(solana_address::address!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
-            rent: self.rent.unwrap_or(solana_address::address!(
-                "SysvarRent111111111111111111111111111111111"
-            )),
         };
         let args = OpenEpochInstructionArgs {
             epoch_id: self.epoch_id.clone().expect("epoch_id is not set"),
@@ -309,8 +293,6 @@ pub struct OpenEpochCpiAccounts<'a, 'b> {
     pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
     pub token_program: &'b solana_account_info::AccountInfo<'a>,
-
-    pub rent: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `open_epoch` CPI instruction.
@@ -335,8 +317,6 @@ pub struct OpenEpochCpi<'a, 'b> {
     pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
     pub token_program: &'b solana_account_info::AccountInfo<'a>,
-
-    pub rent: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: OpenEpochInstructionArgs,
 }
@@ -358,7 +338,6 @@ impl<'a, 'b> OpenEpochCpi<'a, 'b> {
             reward_mint: accounts.reward_mint,
             system_program: accounts.system_program,
             token_program: accounts.token_program,
-            rent: accounts.rent,
             __args: args,
         }
     }
@@ -385,7 +364,7 @@ impl<'a, 'b> OpenEpochCpi<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_error::ProgramResult {
-        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.oracle.key,
             true,
@@ -416,10 +395,6 @@ impl<'a, 'b> OpenEpochCpi<'a, 'b> {
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.rent.key,
-            false,
-        ));
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
@@ -436,7 +411,7 @@ impl<'a, 'b> OpenEpochCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(11 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(10 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.oracle.clone());
         account_infos.push(self.funder.clone());
@@ -447,7 +422,6 @@ impl<'a, 'b> OpenEpochCpi<'a, 'b> {
         account_infos.push(self.reward_mint.clone());
         account_infos.push(self.system_program.clone());
         account_infos.push(self.token_program.clone());
-        account_infos.push(self.rent.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -473,7 +447,6 @@ impl<'a, 'b> OpenEpochCpi<'a, 'b> {
 ///   6. `[]` reward_mint
 ///   7. `[]` system_program
 ///   8. `[]` token_program
-///   9. `[]` rent
 #[derive(Clone, Debug)]
 pub struct OpenEpochCpiBuilder<'a, 'b> {
     instruction: Box<OpenEpochCpiBuilderInstruction<'a, 'b>>,
@@ -492,7 +465,6 @@ impl<'a, 'b> OpenEpochCpiBuilder<'a, 'b> {
             reward_mint: None,
             system_program: None,
             token_program: None,
-            rent: None,
             epoch_id: None,
             start_slot: None,
             end_slot: None,
@@ -559,11 +531,6 @@ impl<'a, 'b> OpenEpochCpiBuilder<'a, 'b> {
         token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
-        self
-    }
-    #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.rent = Some(rent);
         self
     }
     #[inline(always)]
@@ -677,8 +644,6 @@ impl<'a, 'b> OpenEpochCpiBuilder<'a, 'b> {
                 .instruction
                 .token_program
                 .expect("token_program is not set"),
-
-            rent: self.instruction.rent.expect("rent is not set"),
             __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
@@ -700,7 +665,6 @@ struct OpenEpochCpiBuilderInstruction<'a, 'b> {
     reward_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
     epoch_id: Option<u64>,
     start_slot: Option<u64>,
     end_slot: Option<u64>,

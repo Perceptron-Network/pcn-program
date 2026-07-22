@@ -2,8 +2,8 @@ use anchor_lang::{prelude::*, solana_program::program_option::COption};
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::{
-    error::PcnError, Config, CurveParams, SolReserve, CONFIG_SEED, MINT_AUTHORITY_SEED,
-    SOL_RESERVE_SEED, TOKEN_DECIMALS, TOKEN_RESERVE_SEED,
+    error::PcnError, program::PcnProgram, Config, CurveParams, SolReserve, CONFIG_SEED,
+    MINT_AUTHORITY_SEED, SOL_RESERVE_SEED, TOKEN_DECIMALS, TOKEN_RESERVE_SEED,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -51,6 +51,16 @@ pub fn initialize_config(ctx: Context<InitializeConfig>, args: InitializeConfigA
 pub struct InitializeConfig<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
+    #[account(
+        constraint = program.programdata_address()? == Some(program_data.key())
+            @ PcnError::InvalidProgramData
+    )]
+    pub program: Program<'info, PcnProgram>,
+    #[account(
+        constraint = program_data.upgrade_authority_address == Some(payer.key())
+            @ PcnError::UnauthorizedInitializer
+    )]
+    pub program_data: Account<'info, ProgramData>,
     #[account(init, payer = payer, seeds = [CONFIG_SEED], bump, space = Config::LEN)]
     pub config: Account<'info, Config>,
     #[account(
@@ -82,5 +92,4 @@ pub struct InitializeConfig<'info> {
     pub token_reserve_vault: Account<'info, TokenAccount>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
-    pub rent: Sysvar<'info, Rent>,
 }

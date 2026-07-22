@@ -30,7 +30,7 @@ pub struct Config {
 pub const CONFIG_DISCRIMINATOR: [u8; 8] = [155, 12, 170, 224, 30, 250, 204, 130];
 
 impl Config {
-    pub const LEN: usize = 228;
+    pub const LEN: usize = 236;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {

@@ -23,6 +23,7 @@ const snapshot: ProtocolSnapshot = {
     claimWindowSlots: 1_000n,
     curve: {
       maxEpochMint: 100_000_000_000n,
+      emissionMultiplierPpm: 1_000_000n,
       saturationUnits: 1_000n,
       historyMinted: 1_000_000_000_000n,
       targetSupportLamportsPerToken: 50_000n,
@@ -74,6 +75,7 @@ const values = {
   oracle: wallet.toBase58(),
   claimWindowSlots: "1000",
   maxEpochMint: "100",
+  emissionMultiplierPpm: "1000000",
   saturationUnits: "1000",
   historyMinted: "1000",
   targetSupportLamportsPerToken: "50000",
@@ -116,7 +118,7 @@ test("constructs all seven PCN instruction flows from the Codama client", async 
   };
 
   for (const [action, expectedCount] of Object.entries(
-    expectedInstructionCounts,
+    expectedInstructionCounts
   ) as Array<[ActionKind, number]>) {
     const actionValues = {
       ...values,
@@ -132,7 +134,7 @@ test("constructs all seven PCN instruction flows from the Codama client", async 
     assert.equal(
       prepared.instructions.length,
       expectedCount,
-      `${action} instruction count`,
+      `${action} instruction count`
     );
     assert.equal(prepared.feePayer.toBase58(), wallet.toBase58());
   }

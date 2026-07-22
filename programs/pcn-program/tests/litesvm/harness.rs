@@ -2,7 +2,11 @@
 
 use {
     anchor_lang::{
-        solana_program::{instruction::Instruction, system_instruction, sysvar::SysvarId},
+        solana_program::{
+            bpf_loader_upgradeable::{self, UpgradeableLoaderState},
+            instruction::Instruction,
+            system_instruction,
+        },
         AccountDeserialize, InstructionData, ToAccountMetas,
     },
     anchor_spl::token::{
@@ -50,6 +54,7 @@ pub fn setup_pcn_litesvm() -> Option<PcnTestContext> {
     let mut svm = LiteSVM::new();
     let bytes = std::fs::read(so_path).unwrap();
     svm.add_program(program_id, &bytes).unwrap();
+    set_program_upgrade_authority(&mut svm, payer.pubkey());
     svm.airdrop(&payer.pubkey(), 10_000_000_000).unwrap();
 
     let config = pda(&[pcn_program::CONFIG_SEED]);
@@ -71,6 +76,8 @@ pub fn setup_pcn_litesvm() -> Option<PcnTestContext> {
         .data(),
         pcn_program::accounts::InitializeConfig {
             payer: payer.pubkey(),
+            program: program_id,
+            program_data: program_data_address(),
             config,
             reward_mint: mint.pubkey(),
             mint_authority,
@@ -78,7 +85,6 @@ pub fn setup_pcn_litesvm() -> Option<PcnTestContext> {
             token_reserve_vault,
             system_program: anchor_lang::system_program::ID,
             token_program: spl_token::ID,
-            rent: anchor_lang::prelude::Rent::id(),
         }
         .to_account_metas(None),
     );
@@ -96,6 +102,32 @@ pub fn setup_pcn_litesvm() -> Option<PcnTestContext> {
         token_reserve_vault,
         curve,
     })
+}
+
+fn set_program_upgrade_authority(
+    svm: &mut LiteSVM,
+    upgrade_authority: anchor_lang::prelude::Pubkey,
+) {
+    let address = program_data_address();
+    let mut account = svm.get_account(&address).unwrap();
+    let metadata_len = UpgradeableLoaderState::size_of_programdata_metadata();
+    bincode::serialize_into(
+        &mut account.data[..metadata_len],
+        &UpgradeableLoaderState::ProgramData {
+            slot: 0,
+            upgrade_authority_address: Some(upgrade_authority),
+        },
+    )
+    .unwrap();
+    svm.set_account(address, account).unwrap();
+}
+
+fn program_data_address() -> anchor_lang::prelude::Pubkey {
+    anchor_lang::prelude::Pubkey::find_program_address(
+        &[pcn_program::id().as_ref()],
+        &bpf_loader_upgradeable::ID,
+    )
+    .0
 }
 
 pub fn create_epoch_fixture(ctx: &mut PcnTestContext, epoch_id: u64) -> EpochFixture {
@@ -332,7 +364,6 @@ fn open_epoch_ix(
             reward_mint: ctx.mint.pubkey(),
             system_program: anchor_lang::system_program::ID,
             token_program: spl_token::ID,
-            rent: anchor_lang::prelude::Rent::id(),
         }
         .to_account_metas(None),
     )
@@ -501,6 +532,7 @@ fn program_so_path() -> Option<PathBuf> {
 fn test_curve() -> pcn_program::CurveParams {
     pcn_program::CurveParams {
         max_epoch_mint: pcn_program::TOKEN_BASE_UNITS,
+        emission_multiplier_ppm: pcn_program::EMISSION_MULTIPLIER_PPM_SCALE,
         saturation_units: 100,
         history_minted: pcn_program::TOKEN_BASE_UNITS,
         target_support_lamports_per_token: 10_000_000,

@@ -1,8 +1,7 @@
 use anchor_lang::prelude::*;
-use core::mem::size_of;
 
 #[account]
-#[derive(Debug)]
+#[derive(Debug, InitSpace)]
 pub struct Epoch {
     pub epoch_id: u64,
     pub status: EpochStatus,
@@ -21,12 +20,47 @@ pub struct Epoch {
 }
 
 impl Epoch {
-    pub const LEN: usize = 8 + size_of::<Self>();
+    pub const LEN: usize = 8 + Self::INIT_SPACE;
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq, InitSpace)]
 pub enum EpochStatus {
     Open,
     Finalized,
     Swept,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn epoch_allocation_matches_serialized_space() {
+        let epoch = Epoch {
+            epoch_id: u64::MAX,
+            status: EpochStatus::Swept,
+            start_slot: u64::MAX,
+            end_slot: u64::MAX,
+            support_budget_lamports: u64::MAX,
+            consumed_support_lamports: u64::MAX,
+            total_reward_weight: u64::MAX,
+            reward_pool_amount: u64::MAX,
+            allocated_amount: u64::MAX,
+            claimed_amount: u64::MAX,
+            claim_deadline_slot: u64::MAX,
+            epoch_token_vault: Pubkey::new_unique(),
+            epoch_vault_bump: u8::MAX,
+            bump: u8::MAX,
+        };
+
+        assert_eq!(serialized_len(&epoch), Epoch::INIT_SPACE);
+        assert_eq!(Epoch::LEN, 8 + Epoch::INIT_SPACE);
+        assert_eq!(serialized_len(&EpochStatus::Swept), EpochStatus::INIT_SPACE);
+    }
+
+    fn serialized_len(value: &impl AnchorSerialize) -> usize {
+        let mut data = Vec::new();
+        value.serialize(&mut data).unwrap();
+        data.len()
+    }
 }

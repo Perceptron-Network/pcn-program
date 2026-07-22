@@ -65,9 +65,6 @@ export type OpenEpochInstruction<
   TAccountTokenProgram extends
     | string
     | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-  TAccountRent extends
-    | string
-    | AccountMeta<string> = "SysvarRent111111111111111111111111111111111",
   TRemainingAccounts extends readonly AccountMeta<string>[] = []
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
@@ -102,9 +99,6 @@ export type OpenEpochInstruction<
       TAccountTokenProgram extends string
         ? ReadonlyAccount<TAccountTokenProgram>
         : TAccountTokenProgram,
-      TAccountRent extends string
-        ? ReadonlyAccount<TAccountRent>
-        : TAccountRent,
       ...TRemainingAccounts
     ]
   >;
@@ -166,8 +160,7 @@ export type OpenEpochAsyncInput<
   TAccountMintAuthority extends string = string,
   TAccountRewardMint extends string = string,
   TAccountSystemProgram extends string = string,
-  TAccountTokenProgram extends string = string,
-  TAccountRent extends string = string
+  TAccountTokenProgram extends string = string
 > = {
   oracle: TransactionSigner<TAccountOracle>;
   funder: TransactionSigner<TAccountFunder>;
@@ -178,7 +171,6 @@ export type OpenEpochAsyncInput<
   rewardMint: Address<TAccountRewardMint>;
   systemProgram?: Address<TAccountSystemProgram>;
   tokenProgram?: Address<TAccountTokenProgram>;
-  rent?: Address<TAccountRent>;
   epochId: OpenEpochInstructionDataArgs["epochId"];
   startSlot: OpenEpochInstructionDataArgs["startSlot"];
   endSlot: OpenEpochInstructionDataArgs["endSlot"];
@@ -195,7 +187,6 @@ export async function getOpenEpochInstructionAsync<
   TAccountRewardMint extends string,
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
-  TAccountRent extends string,
   TProgramAddress extends Address = typeof PCN_PROGRAM_PROGRAM_ADDRESS
 >(
   input: OpenEpochAsyncInput<
@@ -207,8 +198,7 @@ export async function getOpenEpochInstructionAsync<
     TAccountMintAuthority,
     TAccountRewardMint,
     TAccountSystemProgram,
-    TAccountTokenProgram,
-    TAccountRent
+    TAccountTokenProgram
   >,
   config?: { programAddress?: TProgramAddress }
 ): Promise<
@@ -222,8 +212,7 @@ export async function getOpenEpochInstructionAsync<
     TAccountMintAuthority,
     TAccountRewardMint,
     TAccountSystemProgram,
-    TAccountTokenProgram,
-    TAccountRent
+    TAccountTokenProgram
   >
 > {
   // Program address.
@@ -240,7 +229,6 @@ export async function getOpenEpochInstructionAsync<
     rewardMint: { value: input.rewardMint ?? null, isWritable: false },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
-    rent: { value: input.rent ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -265,10 +253,6 @@ export async function getOpenEpochInstructionAsync<
     accounts.tokenProgram.value =
       "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" as Address<"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA">;
   }
-  if (!accounts.rent.value) {
-    accounts.rent.value =
-      "SysvarRent111111111111111111111111111111111" as Address<"SysvarRent111111111111111111111111111111111">;
-  }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
@@ -282,13 +266,12 @@ export async function getOpenEpochInstructionAsync<
       getAccountMeta("rewardMint", accounts.rewardMint),
       getAccountMeta("systemProgram", accounts.systemProgram),
       getAccountMeta("tokenProgram", accounts.tokenProgram),
-      getAccountMeta("rent", accounts.rent),
     ],
     data: getOpenEpochInstructionDataEncoder().encode(
       args as OpenEpochInstructionDataArgs
     ),
     programAddress,
-  } as OpenEpochInstruction<TProgramAddress, TAccountOracle, TAccountFunder, TAccountConfig, TAccountEpoch, TAccountEpochTokenVault, TAccountMintAuthority, TAccountRewardMint, TAccountSystemProgram, TAccountTokenProgram, TAccountRent>);
+  } as OpenEpochInstruction<TProgramAddress, TAccountOracle, TAccountFunder, TAccountConfig, TAccountEpoch, TAccountEpochTokenVault, TAccountMintAuthority, TAccountRewardMint, TAccountSystemProgram, TAccountTokenProgram>);
 }
 
 export type OpenEpochInput<
@@ -300,8 +283,7 @@ export type OpenEpochInput<
   TAccountMintAuthority extends string = string,
   TAccountRewardMint extends string = string,
   TAccountSystemProgram extends string = string,
-  TAccountTokenProgram extends string = string,
-  TAccountRent extends string = string
+  TAccountTokenProgram extends string = string
 > = {
   oracle: TransactionSigner<TAccountOracle>;
   funder: TransactionSigner<TAccountFunder>;
@@ -312,7 +294,6 @@ export type OpenEpochInput<
   rewardMint: Address<TAccountRewardMint>;
   systemProgram?: Address<TAccountSystemProgram>;
   tokenProgram?: Address<TAccountTokenProgram>;
-  rent?: Address<TAccountRent>;
   epochId: OpenEpochInstructionDataArgs["epochId"];
   startSlot: OpenEpochInstructionDataArgs["startSlot"];
   endSlot: OpenEpochInstructionDataArgs["endSlot"];
@@ -329,7 +310,6 @@ export function getOpenEpochInstruction<
   TAccountRewardMint extends string,
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
-  TAccountRent extends string,
   TProgramAddress extends Address = typeof PCN_PROGRAM_PROGRAM_ADDRESS
 >(
   input: OpenEpochInput<
@@ -341,8 +321,7 @@ export function getOpenEpochInstruction<
     TAccountMintAuthority,
     TAccountRewardMint,
     TAccountSystemProgram,
-    TAccountTokenProgram,
-    TAccountRent
+    TAccountTokenProgram
   >,
   config?: { programAddress?: TProgramAddress }
 ): OpenEpochInstruction<
@@ -355,8 +334,7 @@ export function getOpenEpochInstruction<
   TAccountMintAuthority,
   TAccountRewardMint,
   TAccountSystemProgram,
-  TAccountTokenProgram,
-  TAccountRent
+  TAccountTokenProgram
 > {
   // Program address.
   const programAddress = config?.programAddress ?? PCN_PROGRAM_PROGRAM_ADDRESS;
@@ -372,7 +350,6 @@ export function getOpenEpochInstruction<
     rewardMint: { value: input.rewardMint ?? null, isWritable: false },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
-    rent: { value: input.rent ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -391,10 +368,6 @@ export function getOpenEpochInstruction<
     accounts.tokenProgram.value =
       "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" as Address<"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA">;
   }
-  if (!accounts.rent.value) {
-    accounts.rent.value =
-      "SysvarRent111111111111111111111111111111111" as Address<"SysvarRent111111111111111111111111111111111">;
-  }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
@@ -408,13 +381,12 @@ export function getOpenEpochInstruction<
       getAccountMeta("rewardMint", accounts.rewardMint),
       getAccountMeta("systemProgram", accounts.systemProgram),
       getAccountMeta("tokenProgram", accounts.tokenProgram),
-      getAccountMeta("rent", accounts.rent),
     ],
     data: getOpenEpochInstructionDataEncoder().encode(
       args as OpenEpochInstructionDataArgs
     ),
     programAddress,
-  } as OpenEpochInstruction<TProgramAddress, TAccountOracle, TAccountFunder, TAccountConfig, TAccountEpoch, TAccountEpochTokenVault, TAccountMintAuthority, TAccountRewardMint, TAccountSystemProgram, TAccountTokenProgram, TAccountRent>);
+  } as OpenEpochInstruction<TProgramAddress, TAccountOracle, TAccountFunder, TAccountConfig, TAccountEpoch, TAccountEpochTokenVault, TAccountMintAuthority, TAccountRewardMint, TAccountSystemProgram, TAccountTokenProgram>);
 }
 
 export type ParsedOpenEpochInstruction<
@@ -432,7 +404,6 @@ export type ParsedOpenEpochInstruction<
     rewardMint: TAccountMetas[6];
     systemProgram: TAccountMetas[7];
     tokenProgram: TAccountMetas[8];
-    rent: TAccountMetas[9];
   };
   data: OpenEpochInstructionData;
 };
@@ -445,12 +416,12 @@ export function parseOpenEpochInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedOpenEpochInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 10) {
+  if (instruction.accounts.length < 9) {
     throw new SolanaError(
       SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
       {
         actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 10,
+        expectedAccountMetas: 9,
       }
     );
   }
@@ -472,7 +443,6 @@ export function parseOpenEpochInstruction<
       rewardMint: getNextAccount(),
       systemProgram: getNextAccount(),
       tokenProgram: getNextAccount(),
-      rent: getNextAccount(),
     },
     data: getOpenEpochInstructionDataDecoder().decode(instruction.data),
   };

@@ -17,6 +17,10 @@ pub const INITIALIZE_CONFIG_DISCRIMINATOR: [u8; 8] = [208, 127, 21, 1, 194, 190,
 pub struct InitializeConfig {
     pub payer: solana_address::Address,
 
+    pub program: solana_address::Address,
+
+    pub program_data: solana_address::Address,
+
     pub config: solana_address::Address,
 
     pub reward_mint: solana_address::Address,
@@ -30,8 +34,6 @@ pub struct InitializeConfig {
     pub system_program: solana_address::Address,
 
     pub token_program: solana_address::Address,
-
-    pub rent: solana_address::Address,
 }
 
 impl InitializeConfig {
@@ -48,8 +50,16 @@ impl InitializeConfig {
         args: InitializeConfigInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.program,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.program_data,
+            false,
+        ));
         accounts.push(solana_instruction::AccountMeta::new(self.config, false));
         accounts.push(solana_instruction::AccountMeta::new(self.reward_mint, true));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
@@ -71,9 +81,6 @@ impl InitializeConfig {
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
-        ));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.rent, false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let mut data = InitializeConfigInstructionData::new().try_to_vec().unwrap();
@@ -130,17 +137,20 @@ impl InitializeConfigInstructionArgs {
 /// ### Accounts:
 ///
 ///   0. `[writable, signer]` payer
-///   1. `[writable]` config
-///   2. `[writable, signer]` reward_mint
-///   3. `[]` mint_authority
-///   4. `[writable]` sol_reserve
-///   5. `[writable]` token_reserve_vault
-///   6. `[optional]` system_program (default to `11111111111111111111111111111111`)
-///   7. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
-///   8. `[optional]` rent (default to `SysvarRent111111111111111111111111111111111`)
+///   1. `[optional]` program (default to `86oGodFG8DfLYHAgYwUPCNQzaods7Auxz9cnU7XzWipt`)
+///   2. `[]` program_data
+///   3. `[writable]` config
+///   4. `[writable, signer]` reward_mint
+///   5. `[]` mint_authority
+///   6. `[writable]` sol_reserve
+///   7. `[writable]` token_reserve_vault
+///   8. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   9. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
 #[derive(Clone, Debug, Default)]
 pub struct InitializeConfigBuilder {
     payer: Option<solana_address::Address>,
+    program: Option<solana_address::Address>,
+    program_data: Option<solana_address::Address>,
     config: Option<solana_address::Address>,
     reward_mint: Option<solana_address::Address>,
     mint_authority: Option<solana_address::Address>,
@@ -148,7 +158,6 @@ pub struct InitializeConfigBuilder {
     token_reserve_vault: Option<solana_address::Address>,
     system_program: Option<solana_address::Address>,
     token_program: Option<solana_address::Address>,
-    rent: Option<solana_address::Address>,
     admin: Option<Address>,
     oracle: Option<Address>,
     claim_window_slots: Option<u64>,
@@ -163,6 +172,17 @@ impl InitializeConfigBuilder {
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_address::Address) -> &mut Self {
         self.payer = Some(payer);
+        self
+    }
+    /// `[optional account, default to '86oGodFG8DfLYHAgYwUPCNQzaods7Auxz9cnU7XzWipt']`
+    #[inline(always)]
+    pub fn program(&mut self, program: solana_address::Address) -> &mut Self {
+        self.program = Some(program);
+        self
+    }
+    #[inline(always)]
+    pub fn program_data(&mut self, program_data: solana_address::Address) -> &mut Self {
+        self.program_data = Some(program_data);
         self
     }
     #[inline(always)]
@@ -205,12 +225,6 @@ impl InitializeConfigBuilder {
         self.token_program = Some(token_program);
         self
     }
-    /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
-    #[inline(always)]
-    pub fn rent(&mut self, rent: solana_address::Address) -> &mut Self {
-        self.rent = Some(rent);
-        self
-    }
     #[inline(always)]
     pub fn admin(&mut self, admin: Address) -> &mut Self {
         self.admin = Some(admin);
@@ -250,6 +264,10 @@ impl InitializeConfigBuilder {
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = InitializeConfig {
             payer: self.payer.expect("payer is not set"),
+            program: self.program.unwrap_or(solana_address::address!(
+                "86oGodFG8DfLYHAgYwUPCNQzaods7Auxz9cnU7XzWipt"
+            )),
+            program_data: self.program_data.expect("program_data is not set"),
             config: self.config.expect("config is not set"),
             reward_mint: self.reward_mint.expect("reward_mint is not set"),
             mint_authority: self.mint_authority.expect("mint_authority is not set"),
@@ -262,9 +280,6 @@ impl InitializeConfigBuilder {
                 .unwrap_or(solana_address::address!("11111111111111111111111111111111")),
             token_program: self.token_program.unwrap_or(solana_address::address!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )),
-            rent: self.rent.unwrap_or(solana_address::address!(
-                "SysvarRent111111111111111111111111111111111"
             )),
         };
         let args = InitializeConfigInstructionArgs {
@@ -285,6 +300,10 @@ impl InitializeConfigBuilder {
 pub struct InitializeConfigCpiAccounts<'a, 'b> {
     pub payer: &'b solana_account_info::AccountInfo<'a>,
 
+    pub program: &'b solana_account_info::AccountInfo<'a>,
+
+    pub program_data: &'b solana_account_info::AccountInfo<'a>,
+
     pub config: &'b solana_account_info::AccountInfo<'a>,
 
     pub reward_mint: &'b solana_account_info::AccountInfo<'a>,
@@ -298,8 +317,6 @@ pub struct InitializeConfigCpiAccounts<'a, 'b> {
     pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
     pub token_program: &'b solana_account_info::AccountInfo<'a>,
-
-    pub rent: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `initialize_config` CPI instruction.
@@ -309,6 +326,10 @@ pub struct InitializeConfigCpi<'a, 'b> {
 
     pub payer: &'b solana_account_info::AccountInfo<'a>,
 
+    pub program: &'b solana_account_info::AccountInfo<'a>,
+
+    pub program_data: &'b solana_account_info::AccountInfo<'a>,
+
     pub config: &'b solana_account_info::AccountInfo<'a>,
 
     pub reward_mint: &'b solana_account_info::AccountInfo<'a>,
@@ -322,8 +343,6 @@ pub struct InitializeConfigCpi<'a, 'b> {
     pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
     pub token_program: &'b solana_account_info::AccountInfo<'a>,
-
-    pub rent: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: InitializeConfigInstructionArgs,
 }
@@ -337,6 +356,8 @@ impl<'a, 'b> InitializeConfigCpi<'a, 'b> {
         Self {
             __program: program,
             payer: accounts.payer,
+            program: accounts.program,
+            program_data: accounts.program_data,
             config: accounts.config,
             reward_mint: accounts.reward_mint,
             mint_authority: accounts.mint_authority,
@@ -344,7 +365,6 @@ impl<'a, 'b> InitializeConfigCpi<'a, 'b> {
             token_reserve_vault: accounts.token_reserve_vault,
             system_program: accounts.system_program,
             token_program: accounts.token_program,
-            rent: accounts.rent,
             __args: args,
         }
     }
@@ -371,8 +391,16 @@ impl<'a, 'b> InitializeConfigCpi<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_error::ProgramResult {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.program.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.program_data.key,
+            false,
+        ));
         accounts.push(solana_instruction::AccountMeta::new(
             *self.config.key,
             false,
@@ -401,10 +429,6 @@ impl<'a, 'b> InitializeConfigCpi<'a, 'b> {
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.rent.key,
-            false,
-        ));
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
@@ -421,9 +445,11 @@ impl<'a, 'b> InitializeConfigCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(10 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(11 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.payer.clone());
+        account_infos.push(self.program.clone());
+        account_infos.push(self.program_data.clone());
         account_infos.push(self.config.clone());
         account_infos.push(self.reward_mint.clone());
         account_infos.push(self.mint_authority.clone());
@@ -431,7 +457,6 @@ impl<'a, 'b> InitializeConfigCpi<'a, 'b> {
         account_infos.push(self.token_reserve_vault.clone());
         account_infos.push(self.system_program.clone());
         account_infos.push(self.token_program.clone());
-        account_infos.push(self.rent.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -449,14 +474,15 @@ impl<'a, 'b> InitializeConfigCpi<'a, 'b> {
 /// ### Accounts:
 ///
 ///   0. `[writable, signer]` payer
-///   1. `[writable]` config
-///   2. `[writable, signer]` reward_mint
-///   3. `[]` mint_authority
-///   4. `[writable]` sol_reserve
-///   5. `[writable]` token_reserve_vault
-///   6. `[]` system_program
-///   7. `[]` token_program
-///   8. `[]` rent
+///   1. `[]` program
+///   2. `[]` program_data
+///   3. `[writable]` config
+///   4. `[writable, signer]` reward_mint
+///   5. `[]` mint_authority
+///   6. `[writable]` sol_reserve
+///   7. `[writable]` token_reserve_vault
+///   8. `[]` system_program
+///   9. `[]` token_program
 #[derive(Clone, Debug)]
 pub struct InitializeConfigCpiBuilder<'a, 'b> {
     instruction: Box<InitializeConfigCpiBuilderInstruction<'a, 'b>>,
@@ -467,6 +493,8 @@ impl<'a, 'b> InitializeConfigCpiBuilder<'a, 'b> {
         let instruction = Box::new(InitializeConfigCpiBuilderInstruction {
             __program: program,
             payer: None,
+            program: None,
+            program_data: None,
             config: None,
             reward_mint: None,
             mint_authority: None,
@@ -474,7 +502,6 @@ impl<'a, 'b> InitializeConfigCpiBuilder<'a, 'b> {
             token_reserve_vault: None,
             system_program: None,
             token_program: None,
-            rent: None,
             admin: None,
             oracle: None,
             claim_window_slots: None,
@@ -486,6 +513,19 @@ impl<'a, 'b> InitializeConfigCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
+        self
+    }
+    #[inline(always)]
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.program = Some(program);
+        self
+    }
+    #[inline(always)]
+    pub fn program_data(
+        &mut self,
+        program_data: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.program_data = Some(program_data);
         self
     }
     #[inline(always)]
@@ -539,11 +579,6 @@ impl<'a, 'b> InitializeConfigCpiBuilder<'a, 'b> {
         token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
-        self
-    }
-    #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.rent = Some(rent);
         self
     }
     #[inline(always)]
@@ -615,6 +650,13 @@ impl<'a, 'b> InitializeConfigCpiBuilder<'a, 'b> {
 
             payer: self.instruction.payer.expect("payer is not set"),
 
+            program: self.instruction.program.expect("program is not set"),
+
+            program_data: self
+                .instruction
+                .program_data
+                .expect("program_data is not set"),
+
             config: self.instruction.config.expect("config is not set"),
 
             reward_mint: self
@@ -646,8 +688,6 @@ impl<'a, 'b> InitializeConfigCpiBuilder<'a, 'b> {
                 .instruction
                 .token_program
                 .expect("token_program is not set"),
-
-            rent: self.instruction.rent.expect("rent is not set"),
             __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
@@ -661,6 +701,8 @@ impl<'a, 'b> InitializeConfigCpiBuilder<'a, 'b> {
 struct InitializeConfigCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
     payer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program_data: Option<&'b solana_account_info::AccountInfo<'a>>,
     config: Option<&'b solana_account_info::AccountInfo<'a>>,
     reward_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
     mint_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
@@ -668,7 +710,6 @@ struct InitializeConfigCpiBuilderInstruction<'a, 'b> {
     token_reserve_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
     admin: Option<Address>,
     oracle: Option<Address>,
     claim_window_slots: Option<u64>,

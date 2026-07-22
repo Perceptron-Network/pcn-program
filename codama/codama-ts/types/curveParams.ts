@@ -19,6 +19,7 @@ import {
 
 export type CurveParams = {
   maxEpochMint: bigint;
+  emissionMultiplierPpm: bigint;
   saturationUnits: bigint;
   historyMinted: bigint;
   targetSupportLamportsPerToken: bigint;
@@ -27,6 +28,7 @@ export type CurveParams = {
 
 export type CurveParamsArgs = {
   maxEpochMint: number | bigint;
+  emissionMultiplierPpm: number | bigint;
   saturationUnits: number | bigint;
   historyMinted: number | bigint;
   targetSupportLamportsPerToken: number | bigint;
@@ -36,6 +38,7 @@ export type CurveParamsArgs = {
 export function getCurveParamsEncoder(): FixedSizeEncoder<CurveParamsArgs> {
   return getStructEncoder([
     ["maxEpochMint", getU64Encoder()],
+    ["emissionMultiplierPpm", getU64Encoder()],
     ["saturationUnits", getU64Encoder()],
     ["historyMinted", getU64Encoder()],
     ["targetSupportLamportsPerToken", getU64Encoder()],
@@ -46,6 +49,7 @@ export function getCurveParamsEncoder(): FixedSizeEncoder<CurveParamsArgs> {
 export function getCurveParamsDecoder(): FixedSizeDecoder<CurveParams> {
   return getStructDecoder([
     ["maxEpochMint", getU64Decoder()],
+    ["emissionMultiplierPpm", getU64Decoder()],
     ["saturationUnits", getU64Decoder()],
     ["historyMinted", getU64Decoder()],
     ["targetSupportLamportsPerToken", getU64Decoder()],

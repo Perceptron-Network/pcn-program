@@ -94,6 +94,11 @@ type FieldDefinition = {
 
 const CURVE_FIELDS: FieldDefinition[] = [
   { key: "maxEpochMint", label: "Max epoch mint", hint: "PCN" },
+  {
+    key: "emissionMultiplierPpm",
+    label: "Emission multiplier",
+    hint: "1–1,000,000 ppm",
+  },
   { key: "saturationUnits", label: "Saturation units", hint: "weight units" },
   { key: "historyMinted", label: "History minted", hint: "PCN" },
   {
@@ -148,7 +153,7 @@ function toPcnInput(value: bigint) {
 function defaultsFor(
   kind: ActionKind,
   snapshot: ProtocolSnapshot,
-  walletAddress: string,
+  walletAddress: string
 ) {
   const config = snapshot.config;
   const latestEpoch = snapshot.epochs[0];
@@ -160,17 +165,20 @@ function defaultsFor(
     kind === "finalize"
       ? openEpoch?.epochId
       : kind === "claim"
-        ? claim?.epochId
-        : finalizedEpoch?.epochId;
+      ? claim?.epochId
+      : finalizedEpoch?.epochId;
 
   return {
     admin: config?.admin || walletAddress,
     oracle: config?.oracle || walletAddress,
     claimWindowSlots: (config?.claimWindowSlots || 216_000n).toString(),
     maxEpochMint: toPcnInput(config?.curve.maxEpochMint || 2_500_000_000_000n),
+    emissionMultiplierPpm: (
+      config?.curve.emissionMultiplierPpm || 1_000_000n
+    ).toString(),
     saturationUnits: (config?.curve.saturationUnits || 25_000_000n).toString(),
     historyMinted: toPcnInput(
-      config?.curve.historyMinted || 100_000_000_000_000n,
+      config?.curve.historyMinted || 100_000_000_000_000n
     ),
     targetSupportLamportsPerToken: (
       config?.curve.targetSupportLamportsPerToken || 50_000n
@@ -198,7 +206,7 @@ export function ActionPanel({
   snapshot: ProtocolSnapshot;
   onPrepare: (
     kind: ActionKind,
-    values: Record<string, string>,
+    values: Record<string, string>
   ) => Promise<PreparedTransaction>;
 }) {
   const { publicKey } = useWallet();
@@ -225,7 +233,7 @@ export function ActionPanel({
         setError(
           cause instanceof Error
             ? cause.message
-            : "Unable to prepare transaction.",
+            : "Unable to prepare transaction."
         );
       }
     });

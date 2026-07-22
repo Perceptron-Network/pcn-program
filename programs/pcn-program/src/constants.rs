@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 pub const TOKEN_DECIMALS: u8 = 9;
 pub const TOKEN_BASE_UNITS: u64 = 1_000_000_000;
 pub const QUALITY_PPM_SCALE: u64 = 1_000_000;
+pub const EMISSION_MULTIPLIER_PPM_SCALE: u64 = 1_000_000;
 
 pub const CONFIG_SEED: &[u8] = b"config";
 pub const MINT_AUTHORITY_SEED: &[u8] = b"mint_authority";

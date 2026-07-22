@@ -10,63 +10,69 @@ use thiserror::Error;
 
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum PcnProgramError {
-    /// 6000 - Only the configured admin may perform this action
+    /// 6000 - Only the program upgrade authority may initialize the config
+    #[error("Only the program upgrade authority may initialize the config")]
+    UnauthorizedInitializer = 0x1770,
+    /// 6001 - ProgramData does not belong to this program
+    #[error("ProgramData does not belong to this program")]
+    InvalidProgramData = 0x1771,
+    /// 6002 - Only the configured admin may perform this action
     #[error("Only the configured admin may perform this action")]
-    UnauthorizedAdmin = 0x1770,
-    /// 6001 - Only the configured oracle may perform this action
+    UnauthorizedAdmin = 0x1772,
+    /// 6003 - Only the configured oracle may perform this action
     #[error("Only the configured oracle may perform this action")]
-    UnauthorizedOracle = 0x1771,
-    /// 6002 - Invalid curve parameters
+    UnauthorizedOracle = 0x1773,
+    /// 6004 - Invalid curve parameters
     #[error("Invalid curve parameters")]
-    InvalidCurveParams = 0x1772,
-    /// 6003 - Invalid claim window
+    InvalidCurveParams = 0x1774,
+    /// 6005 - Invalid claim window
     #[error("Invalid claim window")]
-    InvalidClaimWindow = 0x1773,
-    /// 6004 - Invalid epoch slot window
+    InvalidClaimWindow = 0x1775,
+    /// 6006 - Invalid epoch slot window
     #[error("Invalid epoch slot window")]
-    InvalidEpochWindow = 0x1774,
-    /// 6005 - Invalid support budget
+    InvalidEpochWindow = 0x1776,
+    /// 6007 - Invalid support budget
     #[error("Invalid support budget")]
-    InvalidSupportBudget = 0x1775,
-    /// 6006 - Epoch is not open
+    InvalidSupportBudget = 0x1777,
+    /// 6008 - Epoch is not open
     #[error("Epoch is not open")]
-    EpochNotOpen = 0x1776,
-    /// 6007 - Epoch is not finalized
+    EpochNotOpen = 0x1778,
+    /// 6009 - Epoch is not finalized
     #[error("Epoch is not finalized")]
-    EpochNotFinalized = 0x1777,
-    /// 6008 - Epoch claim deadline has passed
+    EpochNotFinalized = 0x1779,
+    /// 6010 - Epoch claim deadline has passed
     #[error("Epoch claim deadline has passed")]
-    ClaimDeadlinePassed = 0x1778,
-    /// 6009 - Epoch claim deadline has not passed
+    ClaimDeadlinePassed = 0x177A,
+    /// 6011 - Epoch claim deadline has not passed
     #[error("Epoch claim deadline has not passed")]
-    ClaimWindowStillOpen = 0x1779,
-    /// 6010 - Total reward weight must be greater than zero
+    ClaimWindowStillOpen = 0x177B,
+    /// 6012 - Total reward weight must be greater than zero
     #[error("Total reward weight must be greater than zero")]
-    ZeroTotalRewardWeight = 0x177A,
-    /// 6011 - Quality factor exceeds 1.0x
+    ZeroTotalRewardWeight = 0x177C,
+    /// 6013 - Quality factor exceeds 1.0x
     #[error("Quality factor exceeds 1.0x")]
-    InvalidQualityFactor = 0x177B,
-    /// 6012 - Reward pool is zero
+    InvalidQualityFactor = 0x177D,
+    /// 6014 - Reward pool is zero
     #[error("Reward pool is zero")]
-    ZeroRewardPool = 0x177C,
-    /// 6013 - Maximum curve supply is exhausted
+    ZeroRewardPool = 0x177E,
+    /// 6015 - Maximum curve supply is exhausted
     #[error("Maximum curve supply is exhausted")]
-    MaxSupplyExhausted = 0x177D,
-    /// 6014 - Claim allocation exceeds epoch reward pool
+    MaxSupplyExhausted = 0x177F,
+    /// 6016 - Claim allocation exceeds epoch reward pool
     #[error("Claim allocation exceeds epoch reward pool")]
-    ClaimOverAllocation = 0x177E,
-    /// 6015 - Claim already redeemed
+    ClaimOverAllocation = 0x1780,
+    /// 6017 - Claim already redeemed
     #[error("Claim already redeemed")]
-    ClaimAlreadyRedeemed = 0x177F,
-    /// 6016 - Claim account does not match epoch or user
+    ClaimAlreadyRedeemed = 0x1781,
+    /// 6018 - Claim account does not match epoch or user
     #[error("Claim account does not match epoch or user")]
-    InvalidClaimAccount = 0x1780,
-    /// 6017 - Reward mint or token account does not match config
+    InvalidClaimAccount = 0x1782,
+    /// 6019 - Reward mint or token account does not match config
     #[error("Reward mint or token account does not match config")]
-    InvalidTokenAccount = 0x1781,
-    /// 6018 - Arithmetic overflow or underflow
+    InvalidTokenAccount = 0x1783,
+    /// 6020 - Arithmetic overflow or underflow
     #[error("Arithmetic overflow or underflow")]
-    MathOverflow = 0x1782,
+    MathOverflow = 0x1784,
 }
 
 impl From<PcnProgramError> for solana_program_error::ProgramError {

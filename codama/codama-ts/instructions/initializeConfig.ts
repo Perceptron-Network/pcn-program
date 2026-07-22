@@ -66,6 +66,10 @@ export function getInitializeConfigDiscriminatorBytes(): ReadonlyUint8Array {
 export type InitializeConfigInstruction<
   TProgram extends string = typeof PCN_PROGRAM_PROGRAM_ADDRESS,
   TAccountPayer extends string | AccountMeta<string> = string,
+  TAccountProgram extends
+    | string
+    | AccountMeta<string> = "86oGodFG8DfLYHAgYwUPCNQzaods7Auxz9cnU7XzWipt",
+  TAccountProgramData extends string | AccountMeta<string> = string,
   TAccountConfig extends string | AccountMeta<string> = string,
   TAccountRewardMint extends string | AccountMeta<string> = string,
   TAccountMintAuthority extends string | AccountMeta<string> = string,
@@ -77,9 +81,6 @@ export type InitializeConfigInstruction<
   TAccountTokenProgram extends
     | string
     | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-  TAccountRent extends
-    | string
-    | AccountMeta<string> = "SysvarRent111111111111111111111111111111111",
   TRemainingAccounts extends readonly AccountMeta<string>[] = []
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
@@ -89,6 +90,12 @@ export type InitializeConfigInstruction<
         ? WritableSignerAccount<TAccountPayer> &
             AccountSignerMeta<TAccountPayer>
         : TAccountPayer,
+      TAccountProgram extends string
+        ? ReadonlyAccount<TAccountProgram>
+        : TAccountProgram,
+      TAccountProgramData extends string
+        ? ReadonlyAccount<TAccountProgramData>
+        : TAccountProgramData,
       TAccountConfig extends string
         ? WritableAccount<TAccountConfig>
         : TAccountConfig,
@@ -111,9 +118,6 @@ export type InitializeConfigInstruction<
       TAccountTokenProgram extends string
         ? ReadonlyAccount<TAccountTokenProgram>
         : TAccountTokenProgram,
-      TAccountRent extends string
-        ? ReadonlyAccount<TAccountRent>
-        : TAccountRent,
       ...TRemainingAccounts
     ]
   >;
@@ -168,16 +172,19 @@ export function getInitializeConfigInstructionDataCodec(): FixedSizeCodec<
 
 export type InitializeConfigAsyncInput<
   TAccountPayer extends string = string,
+  TAccountProgram extends string = string,
+  TAccountProgramData extends string = string,
   TAccountConfig extends string = string,
   TAccountRewardMint extends string = string,
   TAccountMintAuthority extends string = string,
   TAccountSolReserve extends string = string,
   TAccountTokenReserveVault extends string = string,
   TAccountSystemProgram extends string = string,
-  TAccountTokenProgram extends string = string,
-  TAccountRent extends string = string
+  TAccountTokenProgram extends string = string
 > = {
   payer: TransactionSigner<TAccountPayer>;
+  program?: Address<TAccountProgram>;
+  programData: Address<TAccountProgramData>;
   config?: Address<TAccountConfig>;
   rewardMint: TransactionSigner<TAccountRewardMint>;
   mintAuthority?: Address<TAccountMintAuthority>;
@@ -185,7 +192,6 @@ export type InitializeConfigAsyncInput<
   tokenReserveVault?: Address<TAccountTokenReserveVault>;
   systemProgram?: Address<TAccountSystemProgram>;
   tokenProgram?: Address<TAccountTokenProgram>;
-  rent?: Address<TAccountRent>;
   admin: InitializeConfigInstructionDataArgs["admin"];
   oracle: InitializeConfigInstructionDataArgs["oracle"];
   claimWindowSlots: InitializeConfigInstructionDataArgs["claimWindowSlots"];
@@ -194,6 +200,8 @@ export type InitializeConfigAsyncInput<
 
 export async function getInitializeConfigInstructionAsync<
   TAccountPayer extends string,
+  TAccountProgram extends string,
+  TAccountProgramData extends string,
   TAccountConfig extends string,
   TAccountRewardMint extends string,
   TAccountMintAuthority extends string,
@@ -201,33 +209,34 @@ export async function getInitializeConfigInstructionAsync<
   TAccountTokenReserveVault extends string,
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
-  TAccountRent extends string,
   TProgramAddress extends Address = typeof PCN_PROGRAM_PROGRAM_ADDRESS
 >(
   input: InitializeConfigAsyncInput<
     TAccountPayer,
+    TAccountProgram,
+    TAccountProgramData,
     TAccountConfig,
     TAccountRewardMint,
     TAccountMintAuthority,
     TAccountSolReserve,
     TAccountTokenReserveVault,
     TAccountSystemProgram,
-    TAccountTokenProgram,
-    TAccountRent
+    TAccountTokenProgram
   >,
   config?: { programAddress?: TProgramAddress }
 ): Promise<
   InitializeConfigInstruction<
     TProgramAddress,
     TAccountPayer,
+    TAccountProgram,
+    TAccountProgramData,
     TAccountConfig,
     TAccountRewardMint,
     TAccountMintAuthority,
     TAccountSolReserve,
     TAccountTokenReserveVault,
     TAccountSystemProgram,
-    TAccountTokenProgram,
-    TAccountRent
+    TAccountTokenProgram
   >
 > {
   // Program address.
@@ -236,6 +245,8 @@ export async function getInitializeConfigInstructionAsync<
   // Original accounts.
   const originalAccounts = {
     payer: { value: input.payer ?? null, isWritable: true },
+    program: { value: input.program ?? null, isWritable: false },
+    programData: { value: input.programData ?? null, isWritable: false },
     config: { value: input.config ?? null, isWritable: true },
     rewardMint: { value: input.rewardMint ?? null, isWritable: true },
     mintAuthority: { value: input.mintAuthority ?? null, isWritable: false },
@@ -246,7 +257,6 @@ export async function getInitializeConfigInstructionAsync<
     },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
-    rent: { value: input.rent ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -257,6 +267,10 @@ export async function getInitializeConfigInstructionAsync<
   const args = { ...input };
 
   // Resolve default values.
+  if (!accounts.program.value) {
+    accounts.program.value =
+      "86oGodFG8DfLYHAgYwUPCNQzaods7Auxz9cnU7XzWipt" as Address<"86oGodFG8DfLYHAgYwUPCNQzaods7Auxz9cnU7XzWipt">;
+  }
   if (!accounts.config.value) {
     accounts.config.value = await findConfigPda();
   }
@@ -277,15 +291,13 @@ export async function getInitializeConfigInstructionAsync<
     accounts.tokenProgram.value =
       "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" as Address<"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA">;
   }
-  if (!accounts.rent.value) {
-    accounts.rent.value =
-      "SysvarRent111111111111111111111111111111111" as Address<"SysvarRent111111111111111111111111111111111">;
-  }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
     accounts: [
       getAccountMeta("payer", accounts.payer),
+      getAccountMeta("program", accounts.program),
+      getAccountMeta("programData", accounts.programData),
       getAccountMeta("config", accounts.config),
       getAccountMeta("rewardMint", accounts.rewardMint),
       getAccountMeta("mintAuthority", accounts.mintAuthority),
@@ -293,27 +305,29 @@ export async function getInitializeConfigInstructionAsync<
       getAccountMeta("tokenReserveVault", accounts.tokenReserveVault),
       getAccountMeta("systemProgram", accounts.systemProgram),
       getAccountMeta("tokenProgram", accounts.tokenProgram),
-      getAccountMeta("rent", accounts.rent),
     ],
     data: getInitializeConfigInstructionDataEncoder().encode(
       args as InitializeConfigInstructionDataArgs
     ),
     programAddress,
-  } as InitializeConfigInstruction<TProgramAddress, TAccountPayer, TAccountConfig, TAccountRewardMint, TAccountMintAuthority, TAccountSolReserve, TAccountTokenReserveVault, TAccountSystemProgram, TAccountTokenProgram, TAccountRent>);
+  } as InitializeConfigInstruction<TProgramAddress, TAccountPayer, TAccountProgram, TAccountProgramData, TAccountConfig, TAccountRewardMint, TAccountMintAuthority, TAccountSolReserve, TAccountTokenReserveVault, TAccountSystemProgram, TAccountTokenProgram>);
 }
 
 export type InitializeConfigInput<
   TAccountPayer extends string = string,
+  TAccountProgram extends string = string,
+  TAccountProgramData extends string = string,
   TAccountConfig extends string = string,
   TAccountRewardMint extends string = string,
   TAccountMintAuthority extends string = string,
   TAccountSolReserve extends string = string,
   TAccountTokenReserveVault extends string = string,
   TAccountSystemProgram extends string = string,
-  TAccountTokenProgram extends string = string,
-  TAccountRent extends string = string
+  TAccountTokenProgram extends string = string
 > = {
   payer: TransactionSigner<TAccountPayer>;
+  program?: Address<TAccountProgram>;
+  programData: Address<TAccountProgramData>;
   config: Address<TAccountConfig>;
   rewardMint: TransactionSigner<TAccountRewardMint>;
   mintAuthority: Address<TAccountMintAuthority>;
@@ -321,7 +335,6 @@ export type InitializeConfigInput<
   tokenReserveVault: Address<TAccountTokenReserveVault>;
   systemProgram?: Address<TAccountSystemProgram>;
   tokenProgram?: Address<TAccountTokenProgram>;
-  rent?: Address<TAccountRent>;
   admin: InitializeConfigInstructionDataArgs["admin"];
   oracle: InitializeConfigInstructionDataArgs["oracle"];
   claimWindowSlots: InitializeConfigInstructionDataArgs["claimWindowSlots"];
@@ -330,6 +343,8 @@ export type InitializeConfigInput<
 
 export function getInitializeConfigInstruction<
   TAccountPayer extends string,
+  TAccountProgram extends string,
+  TAccountProgramData extends string,
   TAccountConfig extends string,
   TAccountRewardMint extends string,
   TAccountMintAuthority extends string,
@@ -337,32 +352,33 @@ export function getInitializeConfigInstruction<
   TAccountTokenReserveVault extends string,
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
-  TAccountRent extends string,
   TProgramAddress extends Address = typeof PCN_PROGRAM_PROGRAM_ADDRESS
 >(
   input: InitializeConfigInput<
     TAccountPayer,
+    TAccountProgram,
+    TAccountProgramData,
     TAccountConfig,
     TAccountRewardMint,
     TAccountMintAuthority,
     TAccountSolReserve,
     TAccountTokenReserveVault,
     TAccountSystemProgram,
-    TAccountTokenProgram,
-    TAccountRent
+    TAccountTokenProgram
   >,
   config?: { programAddress?: TProgramAddress }
 ): InitializeConfigInstruction<
   TProgramAddress,
   TAccountPayer,
+  TAccountProgram,
+  TAccountProgramData,
   TAccountConfig,
   TAccountRewardMint,
   TAccountMintAuthority,
   TAccountSolReserve,
   TAccountTokenReserveVault,
   TAccountSystemProgram,
-  TAccountTokenProgram,
-  TAccountRent
+  TAccountTokenProgram
 > {
   // Program address.
   const programAddress = config?.programAddress ?? PCN_PROGRAM_PROGRAM_ADDRESS;
@@ -370,6 +386,8 @@ export function getInitializeConfigInstruction<
   // Original accounts.
   const originalAccounts = {
     payer: { value: input.payer ?? null, isWritable: true },
+    program: { value: input.program ?? null, isWritable: false },
+    programData: { value: input.programData ?? null, isWritable: false },
     config: { value: input.config ?? null, isWritable: true },
     rewardMint: { value: input.rewardMint ?? null, isWritable: true },
     mintAuthority: { value: input.mintAuthority ?? null, isWritable: false },
@@ -380,7 +398,6 @@ export function getInitializeConfigInstruction<
     },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
-    rent: { value: input.rent ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -391,6 +408,10 @@ export function getInitializeConfigInstruction<
   const args = { ...input };
 
   // Resolve default values.
+  if (!accounts.program.value) {
+    accounts.program.value =
+      "86oGodFG8DfLYHAgYwUPCNQzaods7Auxz9cnU7XzWipt" as Address<"86oGodFG8DfLYHAgYwUPCNQzaods7Auxz9cnU7XzWipt">;
+  }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       "11111111111111111111111111111111" as Address<"11111111111111111111111111111111">;
@@ -399,15 +420,13 @@ export function getInitializeConfigInstruction<
     accounts.tokenProgram.value =
       "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" as Address<"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA">;
   }
-  if (!accounts.rent.value) {
-    accounts.rent.value =
-      "SysvarRent111111111111111111111111111111111" as Address<"SysvarRent111111111111111111111111111111111">;
-  }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
     accounts: [
       getAccountMeta("payer", accounts.payer),
+      getAccountMeta("program", accounts.program),
+      getAccountMeta("programData", accounts.programData),
       getAccountMeta("config", accounts.config),
       getAccountMeta("rewardMint", accounts.rewardMint),
       getAccountMeta("mintAuthority", accounts.mintAuthority),
@@ -415,13 +434,12 @@ export function getInitializeConfigInstruction<
       getAccountMeta("tokenReserveVault", accounts.tokenReserveVault),
       getAccountMeta("systemProgram", accounts.systemProgram),
       getAccountMeta("tokenProgram", accounts.tokenProgram),
-      getAccountMeta("rent", accounts.rent),
     ],
     data: getInitializeConfigInstructionDataEncoder().encode(
       args as InitializeConfigInstructionDataArgs
     ),
     programAddress,
-  } as InitializeConfigInstruction<TProgramAddress, TAccountPayer, TAccountConfig, TAccountRewardMint, TAccountMintAuthority, TAccountSolReserve, TAccountTokenReserveVault, TAccountSystemProgram, TAccountTokenProgram, TAccountRent>);
+  } as InitializeConfigInstruction<TProgramAddress, TAccountPayer, TAccountProgram, TAccountProgramData, TAccountConfig, TAccountRewardMint, TAccountMintAuthority, TAccountSolReserve, TAccountTokenReserveVault, TAccountSystemProgram, TAccountTokenProgram>);
 }
 
 export type ParsedInitializeConfigInstruction<
@@ -431,14 +449,15 @@ export type ParsedInitializeConfigInstruction<
   programAddress: Address<TProgram>;
   accounts: {
     payer: TAccountMetas[0];
-    config: TAccountMetas[1];
-    rewardMint: TAccountMetas[2];
-    mintAuthority: TAccountMetas[3];
-    solReserve: TAccountMetas[4];
-    tokenReserveVault: TAccountMetas[5];
-    systemProgram: TAccountMetas[6];
-    tokenProgram: TAccountMetas[7];
-    rent: TAccountMetas[8];
+    program: TAccountMetas[1];
+    programData: TAccountMetas[2];
+    config: TAccountMetas[3];
+    rewardMint: TAccountMetas[4];
+    mintAuthority: TAccountMetas[5];
+    solReserve: TAccountMetas[6];
+    tokenReserveVault: TAccountMetas[7];
+    systemProgram: TAccountMetas[8];
+    tokenProgram: TAccountMetas[9];
   };
   data: InitializeConfigInstructionData;
 };
@@ -451,12 +470,12 @@ export function parseInitializeConfigInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedInitializeConfigInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 9) {
+  if (instruction.accounts.length < 10) {
     throw new SolanaError(
       SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
       {
         actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 9,
+        expectedAccountMetas: 10,
       }
     );
   }
@@ -470,6 +489,8 @@ export function parseInitializeConfigInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       payer: getNextAccount(),
+      program: getNextAccount(),
+      programData: getNextAccount(),
       config: getNextAccount(),
       rewardMint: getNextAccount(),
       mintAuthority: getNextAccount(),
@@ -477,7 +498,6 @@ export function parseInitializeConfigInstruction<
       tokenReserveVault: getNextAccount(),
       systemProgram: getNextAccount(),
       tokenProgram: getNextAccount(),
-      rent: getNextAccount(),
     },
     data: getInitializeConfigInstructionDataDecoder().decode(instruction.data),
   };
