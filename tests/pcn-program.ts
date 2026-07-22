@@ -19,6 +19,13 @@ const QUALITY_PPM_SCALE = 1_000_000;
 const PROGRAM_ID = new web3.PublicKey(
   "FzHRzKNFB7Mck5FHj2MXUaywAgtB2EA2EeEQEkp59Xfo"
 );
+const BPF_LOADER_UPGRADEABLE_PROGRAM_ID = new web3.PublicKey(
+  "BPFLoaderUpgradeab1e11111111111111111111111"
+);
+const programData = web3.PublicKey.findProgramAddressSync(
+  [PROGRAM_ID.toBuffer()],
+  BPF_LOADER_UPGRADEABLE_PROGRAM_ID
+)[0];
 
 type Pcn = Program<PcnProgram>;
 
@@ -51,6 +58,67 @@ describe("pcn-program", () => {
       "confirmed"
     );
 
+    const unauthorizedPayer = web3.Keypair.generate();
+    await provider.connection.confirmTransaction(
+      await provider.connection.requestAirdrop(
+        unauthorizedPayer.publicKey,
+        2_000_000_000
+      ),
+      "confirmed"
+    );
+
+    await expectRejected(
+      program.methods
+        .initializeConfig({
+          admin: admin.publicKey,
+          oracle: oracle.publicKey,
+          claimWindowSlots: new BN(5),
+          curve,
+        })
+        .accountsStrict({
+          payer: unauthorizedPayer.publicKey,
+          program: PROGRAM_ID,
+          programData,
+          config,
+          rewardMint: mint.publicKey,
+          mintAuthority,
+          solReserve,
+          tokenReserveVault,
+          systemProgram: web3.SystemProgram.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          rent: web3.SYSVAR_RENT_PUBKEY,
+        })
+        .signers([unauthorizedPayer, mint])
+        .rpc(),
+      "UnauthorizedInitializer"
+    );
+
+    await expectRejected(
+      program.methods
+        .initializeConfig({
+          admin: admin.publicKey,
+          oracle: oracle.publicKey,
+          claimWindowSlots: new BN(5),
+          curve,
+        })
+        .accountsStrict({
+          payer: payer.publicKey,
+          program: PROGRAM_ID,
+          programData: PROGRAM_ID,
+          config,
+          rewardMint: mint.publicKey,
+          mintAuthority,
+          solReserve,
+          tokenReserveVault,
+          systemProgram: web3.SystemProgram.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          rent: web3.SYSVAR_RENT_PUBKEY,
+        })
+        .signers([mint])
+        .rpc(),
+      "AccountNotProgramData"
+    );
+
     await program.methods
       .initializeConfig({
         admin: admin.publicKey,
@@ -60,6 +128,8 @@ describe("pcn-program", () => {
       })
       .accountsStrict({
         payer: payer.publicKey,
+        program: PROGRAM_ID,
+        programData,
         config,
         rewardMint: mint.publicKey,
         mintAuthority,
@@ -172,7 +242,7 @@ describe("pcn-program", () => {
     expect(await tokenAmount(provider, fx.epochTokenVault)).to.equal("1");
 
     await waitForSlot(provider, finalized.claimDeadlineSlot.toNumber() + 1);
-    await program.methods
+    const sweepSignature = await program.methods
       .sweepEpoch({ epochId: fx.epochId })
       .accountsStrict({
         oracle: oracle.publicKey,
@@ -185,6 +255,7 @@ describe("pcn-program", () => {
       })
       .signers([oracle])
       .rpc();
+    await provider.connection.confirmTransaction(sweepSignature, "confirmed");
 
     const swept = await program.account.epoch.fetch(fx.epoch);
     expect(swept.status).to.deep.equal({ swept: {} });
@@ -328,7 +399,7 @@ describe("pcn-program", () => {
     user: web3.Keypair,
     userTokenAccount: web3.PublicKey
   ) {
-    await program.methods
+    const signature = await program.methods
       .claimReward({ epochId: fx.epochId })
       .accountsStrict({
         user: user.publicKey,
@@ -342,6 +413,7 @@ describe("pcn-program", () => {
       })
       .signers([user])
       .rpc();
+    await provider.connection.confirmTransaction(signature, "confirmed");
   }
 });
 
