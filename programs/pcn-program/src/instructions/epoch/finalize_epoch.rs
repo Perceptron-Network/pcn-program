@@ -47,7 +47,7 @@ pub fn finalize_epoch(ctx: Context<FinalizeEpoch>, args: FinalizeEpochArgs) -> R
         .ok_or(PcnError::MathOverflow)?;
     move_lamports(
         &ctx.accounts.epoch.to_account_info(),
-        &ctx.accounts.refund_target.to_account_info(),
+        &ctx.accounts.support_funder.to_account_info(),
         refund_amount,
     )?;
 
@@ -89,9 +89,6 @@ pub fn finalize_epoch(ctx: Context<FinalizeEpoch>, args: FinalizeEpochArgs) -> R
 #[derive(Accounts)]
 pub struct FinalizeEpoch<'info> {
     pub oracle: Signer<'info>,
-    /// CHECK: Receives unused support lamports.
-    #[account(mut)]
-    pub refund_target: UncheckedAccount<'info>,
     #[account(mut, seeds = [CONFIG_SEED], bump = config.config_bump)]
     pub config: Account<'info, Config>,
     #[account(
@@ -101,6 +98,11 @@ pub struct FinalizeEpoch<'info> {
         has_one = epoch_token_vault
     )]
     pub epoch: Account<'info, Epoch>,
+    #[account(
+        mut,
+        address = epoch.support_funder @ PcnError::InvalidRefundTarget
+    )]
+    pub support_funder: SystemAccount<'info>,
     #[account(
         mut,
         address = epoch.epoch_token_vault,

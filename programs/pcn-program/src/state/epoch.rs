@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+use crate::PerformanceWeights;
+
 #[account]
 #[derive(Debug, InitSpace)]
 pub struct Epoch {
@@ -17,6 +19,8 @@ pub struct Epoch {
     pub epoch_token_vault: Pubkey,
     pub epoch_vault_bump: u8,
     pub bump: u8,
+    pub support_funder: Pubkey,
+    pub performance_weights: PerformanceWeights,
 }
 
 impl Epoch {
@@ -51,11 +55,23 @@ mod tests {
             epoch_token_vault: Pubkey::new_unique(),
             epoch_vault_bump: u8::MAX,
             bump: u8::MAX,
+            support_funder: Pubkey::new_unique(),
+            performance_weights: PerformanceWeights {
+                uptime_ppm: 250_000,
+                bandwidth_ppm: 250_000,
+                fulfilment_rate_ppm: 250_000,
+                quest_score_ppm: 250_000,
+            },
         };
 
         assert_eq!(serialized_len(&epoch), Epoch::INIT_SPACE);
+        assert_eq!(Epoch::INIT_SPACE, 179);
         assert_eq!(Epoch::LEN, 8 + Epoch::INIT_SPACE);
         assert_eq!(serialized_len(&EpochStatus::Swept), EpochStatus::INIT_SPACE);
+        assert_eq!(
+            serialized_len(&epoch.performance_weights),
+            PerformanceWeights::INIT_SPACE
+        );
     }
 
     fn serialized_len(value: &impl AnchorSerialize) -> usize {

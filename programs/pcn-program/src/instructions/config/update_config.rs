@@ -1,12 +1,13 @@
 use anchor_lang::prelude::*;
 
-use crate::{error::PcnError, Config, CurveParams, CONFIG_SEED};
+use crate::{error::PcnError, Config, CurveParams, PerformanceWeights, CONFIG_SEED};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct UpdateConfigArgs {
     pub oracle: Option<Pubkey>,
     pub claim_window_slots: Option<u64>,
     pub curve: Option<CurveParams>,
+    pub performance_weights: Option<PerformanceWeights>,
 }
 
 pub fn update_config(ctx: Context<UpdateConfig>, args: UpdateConfigArgs) -> Result<()> {
@@ -31,6 +32,10 @@ pub fn update_config(ctx: Context<UpdateConfig>, args: UpdateConfigArgs) -> Resu
             PcnError::MaxSupplyExhausted
         );
         ctx.accounts.config.curve = curve;
+    }
+    if let Some(performance_weights) = args.performance_weights {
+        performance_weights.validate()?;
+        ctx.accounts.config.performance_weights = performance_weights;
     }
     Ok(())
 }

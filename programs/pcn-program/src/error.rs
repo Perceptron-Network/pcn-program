@@ -28,8 +28,10 @@ pub enum PcnError {
     ClaimWindowStillOpen,
     #[msg("Total reward weight must be greater than zero")]
     ZeroTotalRewardWeight,
-    #[msg("Quality factor exceeds 1.0x")]
-    InvalidQualityFactor,
+    #[msg("Performance metrics must each be between zero and one million ppm")]
+    InvalidPerformanceMetrics,
+    #[msg("Performance weights must each be at most one million ppm and sum to one million ppm")]
+    InvalidPerformanceWeights,
     #[msg("Reward pool is zero")]
     ZeroRewardPool,
     #[msg("Maximum curve supply is exhausted")]
@@ -42,6 +44,8 @@ pub enum PcnError {
     InvalidClaimAccount,
     #[msg("Reward mint or token account does not match config")]
     InvalidTokenAccount,
+    #[msg("Refund recipient is not the epoch support funder")]
+    InvalidRefundTarget,
     #[msg("Arithmetic overflow or underflow")]
     MathOverflow,
 }

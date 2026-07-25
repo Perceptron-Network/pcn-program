@@ -40,6 +40,12 @@ import {
   type MaybeEncodedAccount,
   type ReadonlyUint8Array,
 } from "@solana/kit";
+import {
+  getPerformanceMetricsDecoder,
+  getPerformanceMetricsEncoder,
+  type PerformanceMetrics,
+  type PerformanceMetricsArgs,
+} from "../types";
 
 export const CLAIM_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
   155, 70, 22, 176, 123, 215, 246, 102,
@@ -54,8 +60,7 @@ export type Claim = {
   epoch: Address;
   epochId: bigint;
   user: Address;
-  bandwidthUnits: bigint;
-  qualityFactorPpm: bigint;
+  performance: PerformanceMetrics;
   rewardWeight: bigint;
   rewardAmount: bigint;
   claimed: boolean;
@@ -66,8 +71,7 @@ export type ClaimArgs = {
   epoch: Address;
   epochId: number | bigint;
   user: Address;
-  bandwidthUnits: number | bigint;
-  qualityFactorPpm: number | bigint;
+  performance: PerformanceMetricsArgs;
   rewardWeight: number | bigint;
   rewardAmount: number | bigint;
   claimed: boolean;
@@ -82,8 +86,7 @@ export function getClaimEncoder(): FixedSizeEncoder<ClaimArgs> {
       ["epoch", getAddressEncoder()],
       ["epochId", getU64Encoder()],
       ["user", getAddressEncoder()],
-      ["bandwidthUnits", getU64Encoder()],
-      ["qualityFactorPpm", getU64Encoder()],
+      ["performance", getPerformanceMetricsEncoder()],
       ["rewardWeight", getU64Encoder()],
       ["rewardAmount", getU64Encoder()],
       ["claimed", getBooleanEncoder()],
@@ -100,8 +103,7 @@ export function getClaimDecoder(): FixedSizeDecoder<Claim> {
     ["epoch", getAddressDecoder()],
     ["epochId", getU64Decoder()],
     ["user", getAddressDecoder()],
-    ["bandwidthUnits", getU64Decoder()],
-    ["qualityFactorPpm", getU64Decoder()],
+    ["performance", getPerformanceMetricsDecoder()],
     ["rewardWeight", getU64Decoder()],
     ["rewardAmount", getU64Decoder()],
     ["claimed", getBooleanDecoder()],
@@ -168,5 +170,5 @@ export async function fetchAllMaybeClaim(
 }
 
 export function getClaimSize(): number {
-  return 114;
+  return 130;
 }

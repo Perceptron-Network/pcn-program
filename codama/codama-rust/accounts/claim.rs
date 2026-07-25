@@ -5,6 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use crate::codama_rust::types::PerformanceMetrics;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 use solana_address::Address;
@@ -15,8 +16,7 @@ pub struct Claim {
     pub epoch: Address,
     pub epoch_id: u64,
     pub user: Address,
-    pub bandwidth_units: u64,
-    pub quality_factor_ppm: u64,
+    pub performance: PerformanceMetrics,
     pub reward_weight: u64,
     pub reward_amount: u64,
     pub claimed: bool,
@@ -26,7 +26,7 @@ pub struct Claim {
 pub const CLAIM_DISCRIMINATOR: [u8; 8] = [155, 70, 22, 176, 123, 215, 246, 102];
 
 impl Claim {
-    pub const LEN: usize = 114;
+    pub const LEN: usize = 130;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {

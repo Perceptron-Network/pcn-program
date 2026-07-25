@@ -24,7 +24,7 @@ import type {
 
 function matchesDiscriminator(
   data: ArrayLike<number>,
-  expected: ArrayLike<number>
+  expected: ArrayLike<number>,
 ) {
   return (
     data.length >= expected.length &&
@@ -44,6 +44,7 @@ function toConfigView(address: PublicKey, bytes: Uint8Array): ConfigView {
     lifetimeCurveMintedAmount: data.lifetimeCurveMintedAmount,
     claimWindowSlots: data.claimWindowSlots,
     curve: data.curve,
+    performanceWeights: data.performanceWeights,
   };
 }
 
@@ -63,6 +64,8 @@ function toEpochView(address: PublicKey, bytes: Uint8Array): EpochView {
     claimedAmount: data.claimedAmount,
     claimDeadlineSlot: data.claimDeadlineSlot,
     epochTokenVault: data.epochTokenVault,
+    supportFunder: data.supportFunder,
+    performanceWeights: data.performanceWeights,
   };
 }
 
@@ -73,8 +76,7 @@ function toClaimView(address: PublicKey, bytes: Uint8Array): ClaimView {
     epoch: data.epoch,
     epochId: data.epochId,
     user: data.user,
-    bandwidthUnits: data.bandwidthUnits,
-    qualityFactorPpm: data.qualityFactorPpm,
+    performance: data.performance,
     rewardWeight: data.rewardWeight,
     rewardAmount: data.rewardAmount,
     claimed: data.claimed,
@@ -108,6 +110,12 @@ export function createDemoSnapshot(walletAddress?: string): ProtocolSnapshot {
         targetSupportLamportsPerToken: 50_000n,
         maxSupply: 1_000_000_000_000_000n,
       },
+      performanceWeights: {
+        uptimePpm: 250_000n,
+        bandwidthPpm: 250_000n,
+        fulfilmentRatePpm: 250_000n,
+        questScorePpm: 250_000n,
+      },
     },
     epochs: [
       {
@@ -124,6 +132,13 @@ export function createDemoSnapshot(walletAddress?: string): ProtocolSnapshot {
         claimedAmount: 0n,
         claimDeadlineSlot: 0n,
         epochTokenVault: "EvPCN004Fq7qY5PcnDemo1111111111111111111111",
+        supportFunder: user,
+        performanceWeights: {
+          uptimePpm: 250_000n,
+          bandwidthPpm: 250_000n,
+          fulfilmentRatePpm: 250_000n,
+          questScorePpm: 250_000n,
+        },
       },
       {
         address: "EpPCN003Fq7qY5PcnDemo1111111111111111111111",
@@ -139,6 +154,13 @@ export function createDemoSnapshot(walletAddress?: string): ProtocolSnapshot {
         claimedAmount: 1_221_800_000_000n,
         claimDeadlineSlot: 348_426_000n,
         epochTokenVault: "EvPCN003Fq7qY5PcnDemo1111111111111111111111",
+        supportFunder: user,
+        performanceWeights: {
+          uptimePpm: 250_000n,
+          bandwidthPpm: 250_000n,
+          fulfilmentRatePpm: 250_000n,
+          questScorePpm: 250_000n,
+        },
       },
       {
         address: "EpPCN002Fq7qY5PcnDemo1111111111111111111111",
@@ -154,6 +176,13 @@ export function createDemoSnapshot(walletAddress?: string): ProtocolSnapshot {
         claimedAmount: 1_522_000_000_000n,
         claimDeadlineSlot: 348_210_000n,
         epochTokenVault: "EvPCN002Fq7qY5PcnDemo1111111111111111111111",
+        supportFunder: user,
+        performanceWeights: {
+          uptimePpm: 250_000n,
+          bandwidthPpm: 250_000n,
+          fulfilmentRatePpm: 250_000n,
+          questScorePpm: 250_000n,
+        },
       },
     ],
     claims: [],
@@ -163,9 +192,13 @@ export function createDemoSnapshot(walletAddress?: string): ProtocolSnapshot {
         epoch: "EpPCN003Fq7qY5PcnDemo1111111111111111111111",
         epochId: 41n,
         user,
-        bandwidthUnits: 4_820_000n,
-        qualityFactorPpm: 972_000n,
-        rewardWeight: 4_685_040n,
+        performance: {
+          uptimePpm: 980_000n,
+          bandwidthPpm: 940_000n,
+          fulfilmentRatePpm: 972_000n,
+          questScorePpm: 996_000n,
+        },
+        rewardWeight: 972_000n,
         rewardAmount: 440_651_812_060n,
         claimed: false,
       },
@@ -179,7 +212,7 @@ export function createDemoSnapshot(walletAddress?: string): ProtocolSnapshot {
 
 export async function loadProtocolSnapshot(
   connection: Connection,
-  walletAddress?: string
+  walletAddress?: string,
 ): Promise<ProtocolSnapshot> {
   const walletKey = walletAddress ? new PublicKey(walletAddress) : null;
   const [slot, programAccounts, walletLamports] = await Promise.all([
@@ -206,7 +239,7 @@ export async function loadProtocolSnapshot(
       console.warn(
         "Ignored malformed PCN account",
         account.pubkey.toBase58(),
-        error
+        error,
       );
     }
   }

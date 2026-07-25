@@ -2,6 +2,7 @@
 mod harness;
 
 use harness::*;
+use solana_signer::Signer;
 
 #[test]
 fn open_and_finalize_require_oracle_and_valid_inputs_in_litesvm() {
@@ -26,5 +27,25 @@ fn open_and_finalize_require_oracle_and_valid_inputs_in_litesvm() {
     open_epoch(&mut ctx, &epoch_success, 10_000_000);
     ctx.svm.warp_to_slot(2);
     assert!(finalize_epoch_result(&mut ctx, &epoch_success, &oracle, 0).is_err());
+    ctx.svm.expire_blockhash();
     assert!(finalize_epoch_result(&mut ctx, &epoch_success, &oracle, 100).is_ok());
+}
+
+#[test]
+fn finalize_refunds_only_the_original_support_funder_in_litesvm() {
+    let Some(mut ctx) = setup_pcn_litesvm() else {
+        eprintln!("skipping LiteSVM test; run `anchor test` first");
+        return;
+    };
+    let epoch = create_epoch_fixture(&mut ctx, 1);
+    open_epoch(&mut ctx, &epoch, 10_000_000);
+    ctx.svm.warp_to_slot(2);
+
+    let attacker = solana_keypair::Keypair::new();
+    ctx.svm.airdrop(&attacker.pubkey(), 1_000_000).unwrap();
+    assert!(finalize_epoch_with_funder_result(&mut ctx, &epoch, attacker.pubkey(), 100).is_err());
+
+    finalize_epoch(&mut ctx, &epoch, 100);
+    let finalized: pcn_program::Epoch = get_anchor_account(&ctx.svm, &epoch.epoch);
+    assert_eq!(finalized.support_funder, ctx.payer.pubkey());
 }

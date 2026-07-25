@@ -48,8 +48,12 @@ import { PCN_PROGRAM_PROGRAM_ADDRESS } from "../programs";
 import {
   getCurveParamsDecoder,
   getCurveParamsEncoder,
+  getPerformanceWeightsDecoder,
+  getPerformanceWeightsEncoder,
   type CurveParams,
   type CurveParamsArgs,
+  type PerformanceWeights,
+  type PerformanceWeightsArgs,
 } from "../types";
 
 export const UPDATE_CONFIG_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
@@ -87,12 +91,14 @@ export type UpdateConfigInstructionData = {
   oracle: Option<Address>;
   claimWindowSlots: Option<bigint>;
   curve: Option<CurveParams>;
+  performanceWeights: Option<PerformanceWeights>;
 };
 
 export type UpdateConfigInstructionDataArgs = {
   oracle: OptionOrNullable<Address>;
   claimWindowSlots: OptionOrNullable<number | bigint>;
   curve: OptionOrNullable<CurveParamsArgs>;
+  performanceWeights: OptionOrNullable<PerformanceWeightsArgs>;
 };
 
 export function getUpdateConfigInstructionDataEncoder(): Encoder<UpdateConfigInstructionDataArgs> {
@@ -102,6 +108,7 @@ export function getUpdateConfigInstructionDataEncoder(): Encoder<UpdateConfigIns
       ["oracle", getOptionEncoder(getAddressEncoder())],
       ["claimWindowSlots", getOptionEncoder(getU64Encoder())],
       ["curve", getOptionEncoder(getCurveParamsEncoder())],
+      ["performanceWeights", getOptionEncoder(getPerformanceWeightsEncoder())],
     ]),
     (value) => ({ ...value, discriminator: UPDATE_CONFIG_DISCRIMINATOR })
   );
@@ -113,6 +120,7 @@ export function getUpdateConfigInstructionDataDecoder(): Decoder<UpdateConfigIns
     ["oracle", getOptionDecoder(getAddressDecoder())],
     ["claimWindowSlots", getOptionDecoder(getU64Decoder())],
     ["curve", getOptionDecoder(getCurveParamsDecoder())],
+    ["performanceWeights", getOptionDecoder(getPerformanceWeightsDecoder())],
   ]);
 }
 
@@ -135,6 +143,7 @@ export type UpdateConfigAsyncInput<
   oracle: UpdateConfigInstructionDataArgs["oracle"];
   claimWindowSlots: UpdateConfigInstructionDataArgs["claimWindowSlots"];
   curve: UpdateConfigInstructionDataArgs["curve"];
+  performanceWeights: UpdateConfigInstructionDataArgs["performanceWeights"];
 };
 
 export async function getUpdateConfigInstructionAsync<
@@ -190,6 +199,7 @@ export type UpdateConfigInput<
   oracle: UpdateConfigInstructionDataArgs["oracle"];
   claimWindowSlots: UpdateConfigInstructionDataArgs["claimWindowSlots"];
   curve: UpdateConfigInstructionDataArgs["curve"];
+  performanceWeights: UpdateConfigInstructionDataArgs["performanceWeights"];
 };
 
 export function getUpdateConfigInstruction<

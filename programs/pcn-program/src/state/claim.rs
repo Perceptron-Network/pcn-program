@@ -1,13 +1,35 @@
 use anchor_lang::prelude::*;
 
+use crate::{error::PcnError, PERFORMANCE_PPM_SCALE};
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq, InitSpace)]
+pub struct PerformanceMetrics {
+    pub uptime_ppm: u64,
+    pub bandwidth_ppm: u64,
+    pub fulfilment_rate_ppm: u64,
+    pub quest_score_ppm: u64,
+}
+
+impl PerformanceMetrics {
+    pub fn validate(&self) -> Result<()> {
+        require!(
+            self.uptime_ppm <= PERFORMANCE_PPM_SCALE
+                && self.bandwidth_ppm <= PERFORMANCE_PPM_SCALE
+                && self.fulfilment_rate_ppm <= PERFORMANCE_PPM_SCALE
+                && self.quest_score_ppm <= PERFORMANCE_PPM_SCALE,
+            PcnError::InvalidPerformanceMetrics
+        );
+        Ok(())
+    }
+}
+
 #[account]
 #[derive(Debug, InitSpace)]
 pub struct Claim {
     pub epoch: Pubkey,
     pub epoch_id: u64,
     pub user: Pubkey,
-    pub bandwidth_units: u64,
-    pub quality_factor_ppm: u64,
+    pub performance: PerformanceMetrics,
     pub reward_weight: u64,
     pub reward_amount: u64,
     pub claimed: bool,
@@ -28,8 +50,12 @@ mod tests {
             epoch: Pubkey::new_unique(),
             epoch_id: u64::MAX,
             user: Pubkey::new_unique(),
-            bandwidth_units: u64::MAX,
-            quality_factor_ppm: u64::MAX,
+            performance: PerformanceMetrics {
+                uptime_ppm: PERFORMANCE_PPM_SCALE,
+                bandwidth_ppm: PERFORMANCE_PPM_SCALE,
+                fulfilment_rate_ppm: PERFORMANCE_PPM_SCALE,
+                quest_score_ppm: PERFORMANCE_PPM_SCALE,
+            },
             reward_weight: u64::MAX,
             reward_amount: u64::MAX,
             claimed: true,
@@ -39,6 +65,17 @@ mod tests {
         let mut data = Vec::new();
         claim.serialize(&mut data).unwrap();
         assert_eq!(data.len(), Claim::INIT_SPACE);
+        assert_eq!(Claim::INIT_SPACE, 122);
         assert_eq!(Claim::LEN, 8 + Claim::INIT_SPACE);
+        assert_eq!(
+            serialized_len(&claim.performance),
+            PerformanceMetrics::INIT_SPACE
+        );
+    }
+
+    fn serialized_len(value: &impl AnchorSerialize) -> usize {
+        let mut data = Vec::new();
+        value.serialize(&mut data).unwrap();
+        data.len()
     }
 }

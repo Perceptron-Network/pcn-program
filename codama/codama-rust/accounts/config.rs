@@ -6,6 +6,7 @@
 //!
 
 use crate::codama_rust::types::CurveParams;
+use crate::codama_rust::types::PerformanceWeights;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 use solana_address::Address;
@@ -25,12 +26,13 @@ pub struct Config {
     pub lifetime_curve_minted_amount: u64,
     pub claim_window_slots: u64,
     pub curve: CurveParams,
+    pub performance_weights: PerformanceWeights,
 }
 
 pub const CONFIG_DISCRIMINATOR: [u8; 8] = [155, 12, 170, 224, 30, 250, 204, 130];
 
 impl Config {
-    pub const LEN: usize = 236;
+    pub const LEN: usize = 268;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {

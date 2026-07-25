@@ -17,16 +17,16 @@ The program mints PCN tokens to users based on bandwidth measurements submitted 
 3. **Finalize the epoch**
    - After the epoch ends, the oracle submits the total reward weight.
    - The program computes the reward pool from:
-     - total bandwidth reward weight
+     - total performance reward weight
      - lifetime minted supply
      - remaining max supply
      - available SOL support
    - PCN tokens are minted into the epoch token vault.
-   - Used SOL stays in the program SOL reserve; unused SOL is refunded.
+   - Used SOL stays in the program SOL reserve; unused SOL is refunded only to the original support funder.
 
 4. **Create claims**
-   - The oracle creates one claim PDA per user.
-   - A claim stores the user, bandwidth units, quality factor, reward weight, and reward amount.
+   - The oracle submits four normalized performance metrics for each user.
+   - The program applies the epoch's snapshotted governance weights and stores the resulting reward weight and amount.
 
 5. **Claim rewards**
    - Users claim from the epoch token vault into their own SPL token account.
@@ -37,22 +37,27 @@ The program mints PCN tokens to users based on bandwidth measurements submitted 
 
 ## Main Accounts
 
-- `Config`: admin, oracle, reward mint, reserves, claim window, and curve parameters.
-- `Epoch`: epoch status, SOL budget, reward pool, claim deadline, and token vault.
-- `Claim`: one user reward record for one epoch.
+- `Config`: admin, oracle, reward mint, reserves, claim window, curve parameters, and governance performance weights.
+- `Epoch`: epoch status, original support funder, snapshotted performance weights, oracle-supplied total score, SOL budget, reward pool, claim deadline, and token vault.
+- `Claim`: one user's four performance metrics and computed reward weight for one epoch.
 
-## Emission Multiplier And Oracle Score Encoding
+## Emission Multiplier And Performance Scoring
 
 `CurveParams.emission_multiplier_ppm` is the protocol-set `R` term in the
 scarcity curve. It must be between `1` and `1_000_000`; `1_000_000` means
 `R = 1`. The existing admin may update it by submitting a complete validated
 curve through `update_config`.
 
-Performance scoring remains off-chain. The oracle computes the final scaled
-composite score from the approved uptime, bandwidth, fulfilment, and quest
-inputs, then submits that score as `bandwidth_units` with
-`quality_factor_ppm = 1_000_000`. With this canonical encoding, the on-chain
-`reward_weight` equals the submitted composite score exactly.
+The oracle verifies and submits normalized uptime, bandwidth, fulfilment-rate,
+and quest scores in parts per million. The program applies the governance
+weights snapshotted when the epoch opens:
+
+`P = (w1*Uptime + w2*Bandwidth + w3*FulfilmentRate + w4*QuestScore) / 1_000_000`
+
+Each metric is constrained to `0..=1_000_000`, and the four weights must sum to
+`1_000_000`. The oracle continues to submit the aggregate epoch weight during
+finalization; the program uses each computed `P` for proportional claim
+allocation against that total.
 
 ## Key Commands
 

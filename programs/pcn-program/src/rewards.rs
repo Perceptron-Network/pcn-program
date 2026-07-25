@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 
 use crate::{
-    error::PcnError, CurveParams, EMISSION_MULTIPLIER_PPM_SCALE, QUALITY_PPM_SCALE,
-    TOKEN_BASE_UNITS,
+    error::PcnError, CurveParams, PerformanceMetrics, PerformanceWeights,
+    EMISSION_MULTIPLIER_PPM_SCALE, PERFORMANCE_PPM_SCALE, TOKEN_BASE_UNITS,
 };
 
 const Q64_ONE: u128 = 1_u128 << 64;
@@ -20,15 +20,30 @@ pub struct RewardPoolAmounts {
     pub consumed_support_lamports: u64,
 }
 
-pub fn compute_reward_weight(bandwidth_units: u64, quality_factor_ppm: u64) -> Result<u64> {
-    require!(
-        quality_factor_ppm <= QUALITY_PPM_SCALE,
-        PcnError::InvalidQualityFactor
-    );
-    let weight = u128::from(bandwidth_units)
-        .checked_mul(u128::from(quality_factor_ppm))
+pub fn compute_reward_weight(
+    performance: PerformanceMetrics,
+    weights: PerformanceWeights,
+) -> Result<u64> {
+    performance.validate()?;
+    weights.validate()?;
+    let weighted_uptime = u128::from(performance.uptime_ppm)
+        .checked_mul(u128::from(weights.uptime_ppm))
+        .ok_or(PcnError::MathOverflow)?;
+    let weighted_bandwidth = u128::from(performance.bandwidth_ppm)
+        .checked_mul(u128::from(weights.bandwidth_ppm))
+        .ok_or(PcnError::MathOverflow)?;
+    let weighted_fulfilment = u128::from(performance.fulfilment_rate_ppm)
+        .checked_mul(u128::from(weights.fulfilment_rate_ppm))
+        .ok_or(PcnError::MathOverflow)?;
+    let weighted_quest = u128::from(performance.quest_score_ppm)
+        .checked_mul(u128::from(weights.quest_score_ppm))
+        .ok_or(PcnError::MathOverflow)?;
+    let weight = weighted_uptime
+        .checked_add(weighted_bandwidth)
+        .and_then(|value| value.checked_add(weighted_fulfilment))
+        .and_then(|value| value.checked_add(weighted_quest))
         .ok_or(PcnError::MathOverflow)?
-        .checked_div(u128::from(QUALITY_PPM_SCALE))
+        .checked_div(u128::from(PERFORMANCE_PPM_SCALE))
         .ok_or(PcnError::MathOverflow)?;
     u64::try_from(weight).map_err(|_| PcnError::MathOverflow.into())
 }
@@ -286,24 +301,44 @@ mod tests {
         }
     }
 
-    #[test]
-    fn reward_weight_scales_bandwidth_by_quality() {
-        assert_eq!(
-            compute_reward_weight(1_000, QUALITY_PPM_SCALE).unwrap(),
-            1_000
-        );
-        assert_eq!(compute_reward_weight(1_000, 500_000).unwrap(), 500);
-        assert_eq!(compute_reward_weight(999, 333_333).unwrap(), 332);
-        assert!(compute_reward_weight(1, QUALITY_PPM_SCALE + 1).is_err());
+    fn equal_weights() -> PerformanceWeights {
+        PerformanceWeights {
+            uptime_ppm: 250_000,
+            bandwidth_ppm: 250_000,
+            fulfilment_rate_ppm: 250_000,
+            quest_score_ppm: 250_000,
+        }
     }
 
     #[test]
-    fn canonical_composite_score_encodes_directly_as_reward_weight() {
-        let composite_score = 742_381;
+    fn reward_weight_is_governance_weighted_four_metric_score() {
+        let performance = PerformanceMetrics {
+            uptime_ppm: 1_000_000,
+            bandwidth_ppm: 800_000,
+            fulfilment_rate_ppm: 600_000,
+            quest_score_ppm: 400_000,
+        };
         assert_eq!(
-            compute_reward_weight(composite_score, QUALITY_PPM_SCALE).unwrap(),
-            composite_score
+            compute_reward_weight(performance, equal_weights()).unwrap(),
+            700_000
         );
+    }
+
+    #[test]
+    fn reward_weight_rejects_out_of_range_metric_and_invalid_weights() {
+        let mut performance = PerformanceMetrics {
+            uptime_ppm: 1_000_000,
+            bandwidth_ppm: 800_000,
+            fulfilment_rate_ppm: 600_000,
+            quest_score_ppm: 400_000,
+        };
+        performance.uptime_ppm = PERFORMANCE_PPM_SCALE + 1;
+        assert!(compute_reward_weight(performance, equal_weights()).is_err());
+
+        performance.uptime_ppm = PERFORMANCE_PPM_SCALE;
+        let mut invalid_weights = equal_weights();
+        invalid_weights.quest_score_ppm -= 1;
+        assert!(compute_reward_weight(performance, invalid_weights).is_err());
     }
 
     #[test]

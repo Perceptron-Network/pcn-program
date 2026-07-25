@@ -43,6 +43,12 @@ import {
 } from "@solana/program-client-core";
 import { findConfigPda } from "../pdas";
 import { PCN_PROGRAM_PROGRAM_ADDRESS } from "../programs";
+import {
+  getPerformanceMetricsDecoder,
+  getPerformanceMetricsEncoder,
+  type PerformanceMetrics,
+  type PerformanceMetricsArgs,
+} from "../types";
 
 export const CREATE_CLAIM_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
   71, 122, 43, 84, 240, 165, 215, 181,
@@ -97,15 +103,13 @@ export type CreateClaimInstructionData = {
   discriminator: ReadonlyUint8Array;
   epochId: bigint;
   user: Address;
-  bandwidthUnits: bigint;
-  qualityFactorPpm: bigint;
+  performance: PerformanceMetrics;
 };
 
 export type CreateClaimInstructionDataArgs = {
   epochId: number | bigint;
   user: Address;
-  bandwidthUnits: number | bigint;
-  qualityFactorPpm: number | bigint;
+  performance: PerformanceMetricsArgs;
 };
 
 export function getCreateClaimInstructionDataEncoder(): FixedSizeEncoder<CreateClaimInstructionDataArgs> {
@@ -114,8 +118,7 @@ export function getCreateClaimInstructionDataEncoder(): FixedSizeEncoder<CreateC
       ["discriminator", fixEncoderSize(getBytesEncoder(), 8)],
       ["epochId", getU64Encoder()],
       ["user", getAddressEncoder()],
-      ["bandwidthUnits", getU64Encoder()],
-      ["qualityFactorPpm", getU64Encoder()],
+      ["performance", getPerformanceMetricsEncoder()],
     ]),
     (value) => ({ ...value, discriminator: CREATE_CLAIM_DISCRIMINATOR })
   );
@@ -126,8 +129,7 @@ export function getCreateClaimInstructionDataDecoder(): FixedSizeDecoder<CreateC
     ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
     ["epochId", getU64Decoder()],
     ["user", getAddressDecoder()],
-    ["bandwidthUnits", getU64Decoder()],
-    ["qualityFactorPpm", getU64Decoder()],
+    ["performance", getPerformanceMetricsDecoder()],
   ]);
 }
 
@@ -157,8 +159,7 @@ export type CreateClaimAsyncInput<
   systemProgram?: Address<TAccountSystemProgram>;
   epochId: CreateClaimInstructionDataArgs["epochId"];
   user: CreateClaimInstructionDataArgs["user"];
-  bandwidthUnits: CreateClaimInstructionDataArgs["bandwidthUnits"];
-  qualityFactorPpm: CreateClaimInstructionDataArgs["qualityFactorPpm"];
+  performance: CreateClaimInstructionDataArgs["performance"];
 };
 
 export async function getCreateClaimInstructionAsync<
@@ -252,8 +253,7 @@ export type CreateClaimInput<
   systemProgram?: Address<TAccountSystemProgram>;
   epochId: CreateClaimInstructionDataArgs["epochId"];
   user: CreateClaimInstructionDataArgs["user"];
-  bandwidthUnits: CreateClaimInstructionDataArgs["bandwidthUnits"];
-  qualityFactorPpm: CreateClaimInstructionDataArgs["qualityFactorPpm"];
+  performance: CreateClaimInstructionDataArgs["performance"];
 };
 
 export function getCreateClaimInstruction<

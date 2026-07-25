@@ -2,15 +2,14 @@ use anchor_lang::prelude::*;
 
 use crate::{
     compute_claim_amount, compute_reward_weight, error::PcnError, Claim, Config, Epoch,
-    EpochStatus, CLAIM_SEED, CONFIG_SEED, EPOCH_SEED,
+    EpochStatus, PerformanceMetrics, CLAIM_SEED, CONFIG_SEED, EPOCH_SEED,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CreateClaimArgs {
     pub epoch_id: u64,
     pub user: Pubkey,
-    pub bandwidth_units: u64,
-    pub quality_factor_ppm: u64,
+    pub performance: PerformanceMetrics,
 }
 
 pub fn create_claim(ctx: Context<CreateClaim>, args: CreateClaimArgs) -> Result<()> {
@@ -28,7 +27,8 @@ pub fn create_claim(ctx: Context<CreateClaim>, args: CreateClaimArgs) -> Result<
         PcnError::ClaimDeadlinePassed
     );
 
-    let reward_weight = compute_reward_weight(args.bandwidth_units, args.quality_factor_ppm)?;
+    let reward_weight =
+        compute_reward_weight(args.performance, ctx.accounts.epoch.performance_weights)?;
     let reward_amount = compute_claim_amount(
         ctx.accounts.epoch.reward_pool_amount,
         reward_weight,
@@ -49,8 +49,7 @@ pub fn create_claim(ctx: Context<CreateClaim>, args: CreateClaimArgs) -> Result<
     claim.epoch = ctx.accounts.epoch.key();
     claim.epoch_id = args.epoch_id;
     claim.user = args.user;
-    claim.bandwidth_units = args.bandwidth_units;
-    claim.quality_factor_ppm = args.quality_factor_ppm;
+    claim.performance = args.performance;
     claim.reward_weight = reward_weight;
     claim.reward_amount = reward_amount;
     claim.claimed = false;

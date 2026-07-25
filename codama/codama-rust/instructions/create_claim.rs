@@ -5,6 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use crate::codama_rust::types::PerformanceMetrics;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 use solana_address::Address;
@@ -94,8 +95,7 @@ impl Default for CreateClaimInstructionData {
 pub struct CreateClaimInstructionArgs {
     pub epoch_id: u64,
     pub user: Address,
-    pub bandwidth_units: u64,
-    pub quality_factor_ppm: u64,
+    pub performance: PerformanceMetrics,
 }
 
 impl CreateClaimInstructionArgs {
@@ -124,8 +124,7 @@ pub struct CreateClaimBuilder {
     system_program: Option<solana_address::Address>,
     epoch_id: Option<u64>,
     user: Option<Address>,
-    bandwidth_units: Option<u64>,
-    quality_factor_ppm: Option<u64>,
+    performance: Option<PerformanceMetrics>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -175,13 +174,8 @@ impl CreateClaimBuilder {
         self
     }
     #[inline(always)]
-    pub fn bandwidth_units(&mut self, bandwidth_units: u64) -> &mut Self {
-        self.bandwidth_units = Some(bandwidth_units);
-        self
-    }
-    #[inline(always)]
-    pub fn quality_factor_ppm(&mut self, quality_factor_ppm: u64) -> &mut Self {
-        self.quality_factor_ppm = Some(quality_factor_ppm);
+    pub fn performance(&mut self, performance: PerformanceMetrics) -> &mut Self {
+        self.performance = Some(performance);
         self
     }
     /// Add an additional account to the instruction.
@@ -214,14 +208,7 @@ impl CreateClaimBuilder {
         let args = CreateClaimInstructionArgs {
             epoch_id: self.epoch_id.clone().expect("epoch_id is not set"),
             user: self.user.clone().expect("user is not set"),
-            bandwidth_units: self
-                .bandwidth_units
-                .clone()
-                .expect("bandwidth_units is not set"),
-            quality_factor_ppm: self
-                .quality_factor_ppm
-                .clone()
-                .expect("quality_factor_ppm is not set"),
+            performance: self.performance.clone().expect("performance is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -382,8 +369,7 @@ impl<'a, 'b> CreateClaimCpiBuilder<'a, 'b> {
             system_program: None,
             epoch_id: None,
             user: None,
-            bandwidth_units: None,
-            quality_factor_ppm: None,
+            performance: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -432,13 +418,8 @@ impl<'a, 'b> CreateClaimCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn bandwidth_units(&mut self, bandwidth_units: u64) -> &mut Self {
-        self.instruction.bandwidth_units = Some(bandwidth_units);
-        self
-    }
-    #[inline(always)]
-    pub fn quality_factor_ppm(&mut self, quality_factor_ppm: u64) -> &mut Self {
-        self.instruction.quality_factor_ppm = Some(quality_factor_ppm);
+    pub fn performance(&mut self, performance: PerformanceMetrics) -> &mut Self {
+        self.instruction.performance = Some(performance);
         self
     }
     /// Add an additional account to the instruction.
@@ -482,16 +463,11 @@ impl<'a, 'b> CreateClaimCpiBuilder<'a, 'b> {
                 .clone()
                 .expect("epoch_id is not set"),
             user: self.instruction.user.clone().expect("user is not set"),
-            bandwidth_units: self
+            performance: self
                 .instruction
-                .bandwidth_units
+                .performance
                 .clone()
-                .expect("bandwidth_units is not set"),
-            quality_factor_ppm: self
-                .instruction
-                .quality_factor_ppm
-                .clone()
-                .expect("quality_factor_ppm is not set"),
+                .expect("performance is not set"),
         };
         let instruction = CreateClaimCpi {
             __program: self.instruction.__program,
@@ -530,8 +506,7 @@ struct CreateClaimCpiBuilderInstruction<'a, 'b> {
     system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     epoch_id: Option<u64>,
     user: Option<Address>,
-    bandwidth_units: Option<u64>,
-    quality_factor_ppm: Option<u64>,
+    performance: Option<PerformanceMetrics>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

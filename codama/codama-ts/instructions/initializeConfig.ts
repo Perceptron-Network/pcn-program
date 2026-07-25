@@ -50,8 +50,12 @@ import { PCN_PROGRAM_PROGRAM_ADDRESS } from "../programs";
 import {
   getCurveParamsDecoder,
   getCurveParamsEncoder,
+  getPerformanceWeightsDecoder,
+  getPerformanceWeightsEncoder,
   type CurveParams,
   type CurveParamsArgs,
+  type PerformanceWeights,
+  type PerformanceWeightsArgs,
 } from "../types";
 
 export const INITIALIZE_CONFIG_DISCRIMINATOR: ReadonlyUint8Array =
@@ -128,6 +132,7 @@ export type InitializeConfigInstructionData = {
   oracle: Address;
   claimWindowSlots: bigint;
   curve: CurveParams;
+  performanceWeights: PerformanceWeights;
 };
 
 export type InitializeConfigInstructionDataArgs = {
@@ -135,6 +140,7 @@ export type InitializeConfigInstructionDataArgs = {
   oracle: Address;
   claimWindowSlots: number | bigint;
   curve: CurveParamsArgs;
+  performanceWeights: PerformanceWeightsArgs;
 };
 
 export function getInitializeConfigInstructionDataEncoder(): FixedSizeEncoder<InitializeConfigInstructionDataArgs> {
@@ -145,6 +151,7 @@ export function getInitializeConfigInstructionDataEncoder(): FixedSizeEncoder<In
       ["oracle", getAddressEncoder()],
       ["claimWindowSlots", getU64Encoder()],
       ["curve", getCurveParamsEncoder()],
+      ["performanceWeights", getPerformanceWeightsEncoder()],
     ]),
     (value) => ({ ...value, discriminator: INITIALIZE_CONFIG_DISCRIMINATOR })
   );
@@ -157,6 +164,7 @@ export function getInitializeConfigInstructionDataDecoder(): FixedSizeDecoder<In
     ["oracle", getAddressDecoder()],
     ["claimWindowSlots", getU64Decoder()],
     ["curve", getCurveParamsDecoder()],
+    ["performanceWeights", getPerformanceWeightsDecoder()],
   ]);
 }
 
@@ -196,6 +204,7 @@ export type InitializeConfigAsyncInput<
   oracle: InitializeConfigInstructionDataArgs["oracle"];
   claimWindowSlots: InitializeConfigInstructionDataArgs["claimWindowSlots"];
   curve: InitializeConfigInstructionDataArgs["curve"];
+  performanceWeights: InitializeConfigInstructionDataArgs["performanceWeights"];
 };
 
 export async function getInitializeConfigInstructionAsync<
@@ -339,6 +348,7 @@ export type InitializeConfigInput<
   oracle: InitializeConfigInstructionDataArgs["oracle"];
   claimWindowSlots: InitializeConfigInstructionDataArgs["claimWindowSlots"];
   curve: InitializeConfigInstructionDataArgs["curve"];
+  performanceWeights: InitializeConfigInstructionDataArgs["performanceWeights"];
 };
 
 export function getInitializeConfigInstruction<

@@ -29,10 +29,14 @@ fn happy_path_claims_and_sweeps_dust_in_litesvm() {
         &mut ctx,
         &epoch,
         epoch.user_one.pubkey(),
-        50,
-        pcn_program::QUALITY_PPM_SCALE,
+        performance(100, 0, 100, 0),
     );
-    let claim_two = create_claim(&mut ctx, &epoch, epoch.user_two.pubkey(), 100, 500_000);
+    let claim_two = create_claim(
+        &mut ctx,
+        &epoch,
+        epoch.user_two.pubkey(),
+        performance(0, 100, 0, 100),
+    );
 
     claim_reward(
         &mut ctx,

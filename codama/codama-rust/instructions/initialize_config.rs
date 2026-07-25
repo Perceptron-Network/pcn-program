@@ -6,6 +6,7 @@
 //!
 
 use crate::codama_rust::types::CurveParams;
+use crate::codama_rust::types::PerformanceWeights;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 use solana_address::Address;
@@ -124,6 +125,7 @@ pub struct InitializeConfigInstructionArgs {
     pub oracle: Address,
     pub claim_window_slots: u64,
     pub curve: CurveParams,
+    pub performance_weights: PerformanceWeights,
 }
 
 impl InitializeConfigInstructionArgs {
@@ -162,6 +164,7 @@ pub struct InitializeConfigBuilder {
     oracle: Option<Address>,
     claim_window_slots: Option<u64>,
     curve: Option<CurveParams>,
+    performance_weights: Option<PerformanceWeights>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -245,6 +248,11 @@ impl InitializeConfigBuilder {
         self.curve = Some(curve);
         self
     }
+    #[inline(always)]
+    pub fn performance_weights(&mut self, performance_weights: PerformanceWeights) -> &mut Self {
+        self.performance_weights = Some(performance_weights);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
@@ -290,6 +298,10 @@ impl InitializeConfigBuilder {
                 .clone()
                 .expect("claim_window_slots is not set"),
             curve: self.curve.clone().expect("curve is not set"),
+            performance_weights: self
+                .performance_weights
+                .clone()
+                .expect("performance_weights is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -506,6 +518,7 @@ impl<'a, 'b> InitializeConfigCpiBuilder<'a, 'b> {
             oracle: None,
             claim_window_slots: None,
             curve: None,
+            performance_weights: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -601,6 +614,11 @@ impl<'a, 'b> InitializeConfigCpiBuilder<'a, 'b> {
         self.instruction.curve = Some(curve);
         self
     }
+    #[inline(always)]
+    pub fn performance_weights(&mut self, performance_weights: PerformanceWeights) -> &mut Self {
+        self.instruction.performance_weights = Some(performance_weights);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -644,6 +662,11 @@ impl<'a, 'b> InitializeConfigCpiBuilder<'a, 'b> {
                 .clone()
                 .expect("claim_window_slots is not set"),
             curve: self.instruction.curve.clone().expect("curve is not set"),
+            performance_weights: self
+                .instruction
+                .performance_weights
+                .clone()
+                .expect("performance_weights is not set"),
         };
         let instruction = InitializeConfigCpi {
             __program: self.instruction.__program,
@@ -714,6 +737,7 @@ struct InitializeConfigCpiBuilderInstruction<'a, 'b> {
     oracle: Option<Address>,
     claim_window_slots: Option<u64>,
     curve: Option<CurveParams>,
+    performance_weights: Option<PerformanceWeights>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

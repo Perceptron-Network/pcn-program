@@ -507,12 +507,14 @@ export function App() {
                       Epoch {claim.epochId.toString()}
                     </span>
                     <div>
-                      <small>Bandwidth units</small>
-                      <strong>{formatInteger(claim.bandwidthUnits)}</strong>
+                      <small>Performance weight</small>
+                      <strong>{formatInteger(claim.rewardWeight)}</strong>
                     </div>
                     <div>
-                      <small>Quality</small>
-                      <strong>{formatPercent(claim.qualityFactorPpm)}</strong>
+                      <small>Uptime</small>
+                      <strong>
+                        {formatPercent(claim.performance.uptimePpm)}
+                      </strong>
                     </div>
                     <div>
                       <small>Reward</small>
