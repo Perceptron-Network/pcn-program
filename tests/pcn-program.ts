@@ -16,9 +16,7 @@ const TOKEN_PROGRAM_ID = new web3.PublicKey(
 const TOKEN_ACCOUNT_LEN = 165;
 const TOKEN_BASE_UNITS = 1_000_000_000;
 const QUALITY_PPM_SCALE = 1_000_000;
-const PROGRAM_ID = new web3.PublicKey(
-  "FzHRzKNFB7Mck5FHj2MXUaywAgtB2EA2EeEQEkp59Xfo"
-);
+const PROGRAM_ID = new web3.PublicKey(idl.address);
 const BPF_LOADER_UPGRADEABLE_PROGRAM_ID = new web3.PublicKey(
   "BPFLoaderUpgradeab1e11111111111111111111111"
 );
