@@ -51,6 +51,7 @@ const snapshot: ProtocolSnapshot = {
       claimedAmount: 0n,
       claimDeadlineSlot: 11_000n,
       epochTokenVault: epochVault,
+      supportFunder: wallet.toBase58(),
       performanceWeights: {
         uptimePpm: 250_000n,
         bandwidthPpm: 250_000n,
@@ -72,6 +73,7 @@ const snapshot: ProtocolSnapshot = {
       claimedAmount: 0n,
       claimDeadlineSlot: 0n,
       epochTokenVault: Keypair.generate().publicKey.toBase58(),
+      supportFunder: wallet.toBase58(),
       performanceWeights: {
         uptimePpm: 250_000n,
         bandwidthPpm: 250_000n,
@@ -107,7 +109,6 @@ const values = {
   endSlot: "11000",
   supportSol: "1",
   totalRewardWeight: "1000",
-  refundTarget: wallet.toBase58(),
   user: wallet.toBase58(),
   uptimePpm: "950000",
   bandwidthPpm: "900000",

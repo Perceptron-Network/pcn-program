@@ -73,6 +73,7 @@ export type Epoch = {
   epochTokenVault: Address;
   epochVaultBump: number;
   bump: number;
+  supportFunder: Address;
   performanceWeights: PerformanceWeights;
 };
 
@@ -91,6 +92,7 @@ export type EpochArgs = {
   epochTokenVault: Address;
   epochVaultBump: number;
   bump: number;
+  supportFunder: Address;
   performanceWeights: PerformanceWeightsArgs;
 };
 
@@ -113,6 +115,7 @@ export function getEpochEncoder(): FixedSizeEncoder<EpochArgs> {
       ["epochTokenVault", getAddressEncoder()],
       ["epochVaultBump", getU8Encoder()],
       ["bump", getU8Encoder()],
+      ["supportFunder", getAddressEncoder()],
       ["performanceWeights", getPerformanceWeightsEncoder()],
     ]),
     (value) => ({ ...value, discriminator: EPOCH_DISCRIMINATOR })
@@ -137,6 +140,7 @@ export function getEpochDecoder(): FixedSizeDecoder<Epoch> {
     ["epochTokenVault", getAddressDecoder()],
     ["epochVaultBump", getU8Decoder()],
     ["bump", getU8Decoder()],
+    ["supportFunder", getAddressDecoder()],
     ["performanceWeights", getPerformanceWeightsDecoder()],
   ]);
 }
@@ -200,5 +204,5 @@ export async function fetchAllMaybeEpoch(
 }
 
 export function getEpochSize(): number {
-  return 155;
+  return 187;
 }

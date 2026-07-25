@@ -60,6 +60,7 @@ pub fn open_epoch(ctx: Context<OpenEpoch>, args: OpenEpochArgs) -> Result<()> {
     epoch.epoch_token_vault = ctx.accounts.epoch_token_vault.key();
     epoch.epoch_vault_bump = ctx.bumps.epoch_token_vault;
     epoch.bump = ctx.bumps.epoch;
+    epoch.support_funder = ctx.accounts.funder.key();
     epoch.performance_weights = ctx.accounts.config.performance_weights;
     Ok(())
 }

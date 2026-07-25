@@ -37,6 +37,7 @@ export type EpochView = {
   claimedAmount: bigint;
   claimDeadlineSlot: bigint;
   epochTokenVault: string;
+  supportFunder: string;
   performanceWeights: PerformanceWeights;
 };
 

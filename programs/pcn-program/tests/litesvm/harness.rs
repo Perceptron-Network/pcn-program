@@ -190,7 +190,13 @@ pub fn open_epoch_result(
 }
 
 pub fn finalize_epoch(ctx: &mut PcnTestContext, epoch: &EpochFixture, total_reward_weight: u64) {
-    let ix = finalize_epoch_ix(ctx, epoch, ctx.oracle.pubkey(), total_reward_weight);
+    let ix = finalize_epoch_ix(
+        ctx,
+        epoch,
+        ctx.oracle.pubkey(),
+        ctx.payer.pubkey(),
+        total_reward_weight,
+    );
     send(
         &mut ctx.svm,
         &ctx.payer,
@@ -205,8 +211,35 @@ pub fn finalize_epoch_result(
     oracle: &Keypair,
     total_reward_weight: u64,
 ) -> TransactionResult {
-    let ix = finalize_epoch_ix(ctx, epoch, oracle.pubkey(), total_reward_weight);
+    let ix = finalize_epoch_ix(
+        ctx,
+        epoch,
+        oracle.pubkey(),
+        ctx.payer.pubkey(),
+        total_reward_weight,
+    );
     send_result(&mut ctx.svm, &ctx.payer, vec![ix], &[&ctx.payer, oracle])
+}
+
+pub fn finalize_epoch_with_funder_result(
+    ctx: &mut PcnTestContext,
+    epoch: &EpochFixture,
+    support_funder: anchor_lang::prelude::Pubkey,
+    total_reward_weight: u64,
+) -> TransactionResult {
+    let ix = finalize_epoch_ix(
+        ctx,
+        epoch,
+        ctx.oracle.pubkey(),
+        support_funder,
+        total_reward_weight,
+    );
+    send_result(
+        &mut ctx.svm,
+        &ctx.payer,
+        vec![ix],
+        &[&ctx.payer, &ctx.oracle],
+    )
 }
 
 pub fn create_claim(
@@ -375,6 +408,7 @@ fn finalize_epoch_ix(
     ctx: &PcnTestContext,
     epoch: &EpochFixture,
     oracle: anchor_lang::prelude::Pubkey,
+    support_funder: anchor_lang::prelude::Pubkey,
     total_reward_weight: u64,
 ) -> Instruction {
     Instruction::new_with_bytes(
@@ -387,9 +421,9 @@ fn finalize_epoch_ix(
         .data(),
         pcn_program::accounts::FinalizeEpoch {
             oracle,
-            refund_target: ctx.payer.pubkey(),
             config: ctx.config,
             epoch: epoch.epoch,
+            support_funder,
             epoch_token_vault: epoch.epoch_token_vault,
             reward_mint: ctx.mint.pubkey(),
             mint_authority: ctx.mint_authority,

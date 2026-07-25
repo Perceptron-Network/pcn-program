@@ -15,11 +15,11 @@ pub const FINALIZE_EPOCH_DISCRIMINATOR: [u8; 8] = [159, 93, 117, 217, 63, 44, 24
 pub struct FinalizeEpoch {
     pub oracle: solana_address::Address,
 
-    pub refund_target: solana_address::Address,
-
     pub config: solana_address::Address,
 
     pub epoch: solana_address::Address,
+
+    pub support_funder: solana_address::Address,
 
     pub epoch_token_vault: solana_address::Address,
 
@@ -53,12 +53,12 @@ impl FinalizeEpoch {
             self.oracle,
             true,
         ));
-        accounts.push(solana_instruction::AccountMeta::new(
-            self.refund_target,
-            false,
-        ));
         accounts.push(solana_instruction::AccountMeta::new(self.config, false));
         accounts.push(solana_instruction::AccountMeta::new(self.epoch, false));
+        accounts.push(solana_instruction::AccountMeta::new(
+            self.support_funder,
+            false,
+        ));
         accounts.push(solana_instruction::AccountMeta::new(
             self.epoch_token_vault,
             false,
@@ -135,9 +135,9 @@ impl FinalizeEpochInstructionArgs {
 /// ### Accounts:
 ///
 ///   0. `[signer]` oracle
-///   1. `[writable]` refund_target
-///   2. `[writable]` config
-///   3. `[writable]` epoch
+///   1. `[writable]` config
+///   2. `[writable]` epoch
+///   3. `[writable]` support_funder
 ///   4. `[writable]` epoch_token_vault
 ///   5. `[writable]` reward_mint
 ///   6. `[]` mint_authority
@@ -147,9 +147,9 @@ impl FinalizeEpochInstructionArgs {
 #[derive(Clone, Debug, Default)]
 pub struct FinalizeEpochBuilder {
     oracle: Option<solana_address::Address>,
-    refund_target: Option<solana_address::Address>,
     config: Option<solana_address::Address>,
     epoch: Option<solana_address::Address>,
+    support_funder: Option<solana_address::Address>,
     epoch_token_vault: Option<solana_address::Address>,
     reward_mint: Option<solana_address::Address>,
     mint_authority: Option<solana_address::Address>,
@@ -170,11 +170,6 @@ impl FinalizeEpochBuilder {
         self
     }
     #[inline(always)]
-    pub fn refund_target(&mut self, refund_target: solana_address::Address) -> &mut Self {
-        self.refund_target = Some(refund_target);
-        self
-    }
-    #[inline(always)]
     pub fn config(&mut self, config: solana_address::Address) -> &mut Self {
         self.config = Some(config);
         self
@@ -182,6 +177,11 @@ impl FinalizeEpochBuilder {
     #[inline(always)]
     pub fn epoch(&mut self, epoch: solana_address::Address) -> &mut Self {
         self.epoch = Some(epoch);
+        self
+    }
+    #[inline(always)]
+    pub fn support_funder(&mut self, support_funder: solana_address::Address) -> &mut Self {
+        self.support_funder = Some(support_funder);
         self
     }
     #[inline(always)]
@@ -240,9 +240,9 @@ impl FinalizeEpochBuilder {
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = FinalizeEpoch {
             oracle: self.oracle.expect("oracle is not set"),
-            refund_target: self.refund_target.expect("refund_target is not set"),
             config: self.config.expect("config is not set"),
             epoch: self.epoch.expect("epoch is not set"),
+            support_funder: self.support_funder.expect("support_funder is not set"),
             epoch_token_vault: self
                 .epoch_token_vault
                 .expect("epoch_token_vault is not set"),
@@ -271,11 +271,11 @@ impl FinalizeEpochBuilder {
 pub struct FinalizeEpochCpiAccounts<'a, 'b> {
     pub oracle: &'b solana_account_info::AccountInfo<'a>,
 
-    pub refund_target: &'b solana_account_info::AccountInfo<'a>,
-
     pub config: &'b solana_account_info::AccountInfo<'a>,
 
     pub epoch: &'b solana_account_info::AccountInfo<'a>,
+
+    pub support_funder: &'b solana_account_info::AccountInfo<'a>,
 
     pub epoch_token_vault: &'b solana_account_info::AccountInfo<'a>,
 
@@ -297,11 +297,11 @@ pub struct FinalizeEpochCpi<'a, 'b> {
 
     pub oracle: &'b solana_account_info::AccountInfo<'a>,
 
-    pub refund_target: &'b solana_account_info::AccountInfo<'a>,
-
     pub config: &'b solana_account_info::AccountInfo<'a>,
 
     pub epoch: &'b solana_account_info::AccountInfo<'a>,
+
+    pub support_funder: &'b solana_account_info::AccountInfo<'a>,
 
     pub epoch_token_vault: &'b solana_account_info::AccountInfo<'a>,
 
@@ -327,9 +327,9 @@ impl<'a, 'b> FinalizeEpochCpi<'a, 'b> {
         Self {
             __program: program,
             oracle: accounts.oracle,
-            refund_target: accounts.refund_target,
             config: accounts.config,
             epoch: accounts.epoch,
+            support_funder: accounts.support_funder,
             epoch_token_vault: accounts.epoch_token_vault,
             reward_mint: accounts.reward_mint,
             mint_authority: accounts.mint_authority,
@@ -368,14 +368,14 @@ impl<'a, 'b> FinalizeEpochCpi<'a, 'b> {
             true,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            *self.refund_target.key,
-            false,
-        ));
-        accounts.push(solana_instruction::AccountMeta::new(
             *self.config.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(*self.epoch.key, false));
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.support_funder.key,
+            false,
+        ));
         accounts.push(solana_instruction::AccountMeta::new(
             *self.epoch_token_vault.key,
             false,
@@ -419,9 +419,9 @@ impl<'a, 'b> FinalizeEpochCpi<'a, 'b> {
         let mut account_infos = Vec::with_capacity(11 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.oracle.clone());
-        account_infos.push(self.refund_target.clone());
         account_infos.push(self.config.clone());
         account_infos.push(self.epoch.clone());
+        account_infos.push(self.support_funder.clone());
         account_infos.push(self.epoch_token_vault.clone());
         account_infos.push(self.reward_mint.clone());
         account_infos.push(self.mint_authority.clone());
@@ -445,9 +445,9 @@ impl<'a, 'b> FinalizeEpochCpi<'a, 'b> {
 /// ### Accounts:
 ///
 ///   0. `[signer]` oracle
-///   1. `[writable]` refund_target
-///   2. `[writable]` config
-///   3. `[writable]` epoch
+///   1. `[writable]` config
+///   2. `[writable]` epoch
+///   3. `[writable]` support_funder
 ///   4. `[writable]` epoch_token_vault
 ///   5. `[writable]` reward_mint
 ///   6. `[]` mint_authority
@@ -464,9 +464,9 @@ impl<'a, 'b> FinalizeEpochCpiBuilder<'a, 'b> {
         let instruction = Box::new(FinalizeEpochCpiBuilderInstruction {
             __program: program,
             oracle: None,
-            refund_target: None,
             config: None,
             epoch: None,
+            support_funder: None,
             epoch_token_vault: None,
             reward_mint: None,
             mint_authority: None,
@@ -484,14 +484,6 @@ impl<'a, 'b> FinalizeEpochCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn refund_target(
-        &mut self,
-        refund_target: &'b solana_account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.refund_target = Some(refund_target);
-        self
-    }
-    #[inline(always)]
     pub fn config(&mut self, config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.config = Some(config);
         self
@@ -499,6 +491,14 @@ impl<'a, 'b> FinalizeEpochCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn epoch(&mut self, epoch: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.epoch = Some(epoch);
+        self
+    }
+    #[inline(always)]
+    pub fn support_funder(
+        &mut self,
+        support_funder: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.support_funder = Some(support_funder);
         self
     }
     #[inline(always)]
@@ -600,14 +600,14 @@ impl<'a, 'b> FinalizeEpochCpiBuilder<'a, 'b> {
 
             oracle: self.instruction.oracle.expect("oracle is not set"),
 
-            refund_target: self
-                .instruction
-                .refund_target
-                .expect("refund_target is not set"),
-
             config: self.instruction.config.expect("config is not set"),
 
             epoch: self.instruction.epoch.expect("epoch is not set"),
+
+            support_funder: self
+                .instruction
+                .support_funder
+                .expect("support_funder is not set"),
 
             epoch_token_vault: self
                 .instruction
@@ -651,9 +651,9 @@ impl<'a, 'b> FinalizeEpochCpiBuilder<'a, 'b> {
 struct FinalizeEpochCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
     oracle: Option<&'b solana_account_info::AccountInfo<'a>>,
-    refund_target: Option<&'b solana_account_info::AccountInfo<'a>>,
     config: Option<&'b solana_account_info::AccountInfo<'a>>,
     epoch: Option<&'b solana_account_info::AccountInfo<'a>>,
+    support_funder: Option<&'b solana_account_info::AccountInfo<'a>>,
     epoch_token_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
     reward_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
     mint_authority: Option<&'b solana_account_info::AccountInfo<'a>>,

@@ -28,13 +28,14 @@ pub struct Epoch {
     pub epoch_token_vault: Address,
     pub epoch_vault_bump: u8,
     pub bump: u8,
+    pub support_funder: Address,
     pub performance_weights: PerformanceWeights,
 }
 
 pub const EPOCH_DISCRIMINATOR: [u8; 8] = [93, 83, 120, 89, 151, 138, 152, 108];
 
 impl Epoch {
-    pub const LEN: usize = 155;
+    pub const LEN: usize = 187;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {

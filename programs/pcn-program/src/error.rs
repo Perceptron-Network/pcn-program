@@ -44,6 +44,8 @@ pub enum PcnError {
     InvalidClaimAccount,
     #[msg("Reward mint or token account does not match config")]
     InvalidTokenAccount,
+    #[msg("Refund recipient is not the epoch support funder")]
+    InvalidRefundTarget,
     #[msg("Arithmetic overflow or underflow")]
     MathOverflow,
 }

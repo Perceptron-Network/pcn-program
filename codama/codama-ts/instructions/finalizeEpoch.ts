@@ -58,9 +58,9 @@ export function getFinalizeEpochDiscriminatorBytes(): ReadonlyUint8Array {
 export type FinalizeEpochInstruction<
   TProgram extends string = typeof PCN_PROGRAM_PROGRAM_ADDRESS,
   TAccountOracle extends string | AccountMeta<string> = string,
-  TAccountRefundTarget extends string | AccountMeta<string> = string,
   TAccountConfig extends string | AccountMeta<string> = string,
   TAccountEpoch extends string | AccountMeta<string> = string,
+  TAccountSupportFunder extends string | AccountMeta<string> = string,
   TAccountEpochTokenVault extends string | AccountMeta<string> = string,
   TAccountRewardMint extends string | AccountMeta<string> = string,
   TAccountMintAuthority extends string | AccountMeta<string> = string,
@@ -80,15 +80,15 @@ export type FinalizeEpochInstruction<
         ? ReadonlySignerAccount<TAccountOracle> &
             AccountSignerMeta<TAccountOracle>
         : TAccountOracle,
-      TAccountRefundTarget extends string
-        ? WritableAccount<TAccountRefundTarget>
-        : TAccountRefundTarget,
       TAccountConfig extends string
         ? WritableAccount<TAccountConfig>
         : TAccountConfig,
       TAccountEpoch extends string
         ? WritableAccount<TAccountEpoch>
         : TAccountEpoch,
+      TAccountSupportFunder extends string
+        ? WritableAccount<TAccountSupportFunder>
+        : TAccountSupportFunder,
       TAccountEpochTokenVault extends string
         ? WritableAccount<TAccountEpochTokenVault>
         : TAccountEpochTokenVault,
@@ -149,9 +149,9 @@ export function getFinalizeEpochInstructionDataCodec(): FixedSizeCodec<
 
 export type FinalizeEpochAsyncInput<
   TAccountOracle extends string = string,
-  TAccountRefundTarget extends string = string,
   TAccountConfig extends string = string,
   TAccountEpoch extends string = string,
+  TAccountSupportFunder extends string = string,
   TAccountEpochTokenVault extends string = string,
   TAccountRewardMint extends string = string,
   TAccountMintAuthority extends string = string,
@@ -160,9 +160,9 @@ export type FinalizeEpochAsyncInput<
   TAccountSystemProgram extends string = string
 > = {
   oracle: TransactionSigner<TAccountOracle>;
-  refundTarget: Address<TAccountRefundTarget>;
   config?: Address<TAccountConfig>;
   epoch: Address<TAccountEpoch>;
+  supportFunder: Address<TAccountSupportFunder>;
   epochTokenVault: Address<TAccountEpochTokenVault>;
   rewardMint: Address<TAccountRewardMint>;
   mintAuthority?: Address<TAccountMintAuthority>;
@@ -174,9 +174,9 @@ export type FinalizeEpochAsyncInput<
 
 export async function getFinalizeEpochInstructionAsync<
   TAccountOracle extends string,
-  TAccountRefundTarget extends string,
   TAccountConfig extends string,
   TAccountEpoch extends string,
+  TAccountSupportFunder extends string,
   TAccountEpochTokenVault extends string,
   TAccountRewardMint extends string,
   TAccountMintAuthority extends string,
@@ -187,9 +187,9 @@ export async function getFinalizeEpochInstructionAsync<
 >(
   input: FinalizeEpochAsyncInput<
     TAccountOracle,
-    TAccountRefundTarget,
     TAccountConfig,
     TAccountEpoch,
+    TAccountSupportFunder,
     TAccountEpochTokenVault,
     TAccountRewardMint,
     TAccountMintAuthority,
@@ -202,9 +202,9 @@ export async function getFinalizeEpochInstructionAsync<
   FinalizeEpochInstruction<
     TProgramAddress,
     TAccountOracle,
-    TAccountRefundTarget,
     TAccountConfig,
     TAccountEpoch,
+    TAccountSupportFunder,
     TAccountEpochTokenVault,
     TAccountRewardMint,
     TAccountMintAuthority,
@@ -219,9 +219,9 @@ export async function getFinalizeEpochInstructionAsync<
   // Original accounts.
   const originalAccounts = {
     oracle: { value: input.oracle ?? null, isWritable: false },
-    refundTarget: { value: input.refundTarget ?? null, isWritable: true },
     config: { value: input.config ?? null, isWritable: true },
     epoch: { value: input.epoch ?? null, isWritable: true },
+    supportFunder: { value: input.supportFunder ?? null, isWritable: true },
     epochTokenVault: { value: input.epochTokenVault ?? null, isWritable: true },
     rewardMint: { value: input.rewardMint ?? null, isWritable: true },
     mintAuthority: { value: input.mintAuthority ?? null, isWritable: false },
@@ -260,9 +260,9 @@ export async function getFinalizeEpochInstructionAsync<
   return Object.freeze({
     accounts: [
       getAccountMeta("oracle", accounts.oracle),
-      getAccountMeta("refundTarget", accounts.refundTarget),
       getAccountMeta("config", accounts.config),
       getAccountMeta("epoch", accounts.epoch),
+      getAccountMeta("supportFunder", accounts.supportFunder),
       getAccountMeta("epochTokenVault", accounts.epochTokenVault),
       getAccountMeta("rewardMint", accounts.rewardMint),
       getAccountMeta("mintAuthority", accounts.mintAuthority),
@@ -274,14 +274,14 @@ export async function getFinalizeEpochInstructionAsync<
       args as FinalizeEpochInstructionDataArgs
     ),
     programAddress,
-  } as FinalizeEpochInstruction<TProgramAddress, TAccountOracle, TAccountRefundTarget, TAccountConfig, TAccountEpoch, TAccountEpochTokenVault, TAccountRewardMint, TAccountMintAuthority, TAccountSolReserve, TAccountTokenProgram, TAccountSystemProgram>);
+  } as FinalizeEpochInstruction<TProgramAddress, TAccountOracle, TAccountConfig, TAccountEpoch, TAccountSupportFunder, TAccountEpochTokenVault, TAccountRewardMint, TAccountMintAuthority, TAccountSolReserve, TAccountTokenProgram, TAccountSystemProgram>);
 }
 
 export type FinalizeEpochInput<
   TAccountOracle extends string = string,
-  TAccountRefundTarget extends string = string,
   TAccountConfig extends string = string,
   TAccountEpoch extends string = string,
+  TAccountSupportFunder extends string = string,
   TAccountEpochTokenVault extends string = string,
   TAccountRewardMint extends string = string,
   TAccountMintAuthority extends string = string,
@@ -290,9 +290,9 @@ export type FinalizeEpochInput<
   TAccountSystemProgram extends string = string
 > = {
   oracle: TransactionSigner<TAccountOracle>;
-  refundTarget: Address<TAccountRefundTarget>;
   config: Address<TAccountConfig>;
   epoch: Address<TAccountEpoch>;
+  supportFunder: Address<TAccountSupportFunder>;
   epochTokenVault: Address<TAccountEpochTokenVault>;
   rewardMint: Address<TAccountRewardMint>;
   mintAuthority: Address<TAccountMintAuthority>;
@@ -304,9 +304,9 @@ export type FinalizeEpochInput<
 
 export function getFinalizeEpochInstruction<
   TAccountOracle extends string,
-  TAccountRefundTarget extends string,
   TAccountConfig extends string,
   TAccountEpoch extends string,
+  TAccountSupportFunder extends string,
   TAccountEpochTokenVault extends string,
   TAccountRewardMint extends string,
   TAccountMintAuthority extends string,
@@ -317,9 +317,9 @@ export function getFinalizeEpochInstruction<
 >(
   input: FinalizeEpochInput<
     TAccountOracle,
-    TAccountRefundTarget,
     TAccountConfig,
     TAccountEpoch,
+    TAccountSupportFunder,
     TAccountEpochTokenVault,
     TAccountRewardMint,
     TAccountMintAuthority,
@@ -331,9 +331,9 @@ export function getFinalizeEpochInstruction<
 ): FinalizeEpochInstruction<
   TProgramAddress,
   TAccountOracle,
-  TAccountRefundTarget,
   TAccountConfig,
   TAccountEpoch,
+  TAccountSupportFunder,
   TAccountEpochTokenVault,
   TAccountRewardMint,
   TAccountMintAuthority,
@@ -347,9 +347,9 @@ export function getFinalizeEpochInstruction<
   // Original accounts.
   const originalAccounts = {
     oracle: { value: input.oracle ?? null, isWritable: false },
-    refundTarget: { value: input.refundTarget ?? null, isWritable: true },
     config: { value: input.config ?? null, isWritable: true },
     epoch: { value: input.epoch ?? null, isWritable: true },
+    supportFunder: { value: input.supportFunder ?? null, isWritable: true },
     epochTokenVault: { value: input.epochTokenVault ?? null, isWritable: true },
     rewardMint: { value: input.rewardMint ?? null, isWritable: true },
     mintAuthority: { value: input.mintAuthority ?? null, isWritable: false },
@@ -379,9 +379,9 @@ export function getFinalizeEpochInstruction<
   return Object.freeze({
     accounts: [
       getAccountMeta("oracle", accounts.oracle),
-      getAccountMeta("refundTarget", accounts.refundTarget),
       getAccountMeta("config", accounts.config),
       getAccountMeta("epoch", accounts.epoch),
+      getAccountMeta("supportFunder", accounts.supportFunder),
       getAccountMeta("epochTokenVault", accounts.epochTokenVault),
       getAccountMeta("rewardMint", accounts.rewardMint),
       getAccountMeta("mintAuthority", accounts.mintAuthority),
@@ -393,7 +393,7 @@ export function getFinalizeEpochInstruction<
       args as FinalizeEpochInstructionDataArgs
     ),
     programAddress,
-  } as FinalizeEpochInstruction<TProgramAddress, TAccountOracle, TAccountRefundTarget, TAccountConfig, TAccountEpoch, TAccountEpochTokenVault, TAccountRewardMint, TAccountMintAuthority, TAccountSolReserve, TAccountTokenProgram, TAccountSystemProgram>);
+  } as FinalizeEpochInstruction<TProgramAddress, TAccountOracle, TAccountConfig, TAccountEpoch, TAccountSupportFunder, TAccountEpochTokenVault, TAccountRewardMint, TAccountMintAuthority, TAccountSolReserve, TAccountTokenProgram, TAccountSystemProgram>);
 }
 
 export type ParsedFinalizeEpochInstruction<
@@ -403,9 +403,9 @@ export type ParsedFinalizeEpochInstruction<
   programAddress: Address<TProgram>;
   accounts: {
     oracle: TAccountMetas[0];
-    refundTarget: TAccountMetas[1];
-    config: TAccountMetas[2];
-    epoch: TAccountMetas[3];
+    config: TAccountMetas[1];
+    epoch: TAccountMetas[2];
+    supportFunder: TAccountMetas[3];
     epochTokenVault: TAccountMetas[4];
     rewardMint: TAccountMetas[5];
     mintAuthority: TAccountMetas[6];
@@ -443,9 +443,9 @@ export function parseFinalizeEpochInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       oracle: getNextAccount(),
-      refundTarget: getNextAccount(),
       config: getNextAccount(),
       epoch: getNextAccount(),
+      supportFunder: getNextAccount(),
       epochTokenVault: getNextAccount(),
       rewardMint: getNextAccount(),
       mintAuthority: getNextAccount(),

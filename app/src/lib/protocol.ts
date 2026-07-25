@@ -64,6 +64,7 @@ function toEpochView(address: PublicKey, bytes: Uint8Array): EpochView {
     claimedAmount: data.claimedAmount,
     claimDeadlineSlot: data.claimDeadlineSlot,
     epochTokenVault: data.epochTokenVault,
+    supportFunder: data.supportFunder,
     performanceWeights: data.performanceWeights,
   };
 }
@@ -131,6 +132,7 @@ export function createDemoSnapshot(walletAddress?: string): ProtocolSnapshot {
         claimedAmount: 0n,
         claimDeadlineSlot: 0n,
         epochTokenVault: "EvPCN004Fq7qY5PcnDemo1111111111111111111111",
+        supportFunder: user,
         performanceWeights: {
           uptimePpm: 250_000n,
           bandwidthPpm: 250_000n,
@@ -152,6 +154,7 @@ export function createDemoSnapshot(walletAddress?: string): ProtocolSnapshot {
         claimedAmount: 1_221_800_000_000n,
         claimDeadlineSlot: 348_426_000n,
         epochTokenVault: "EvPCN003Fq7qY5PcnDemo1111111111111111111111",
+        supportFunder: user,
         performanceWeights: {
           uptimePpm: 250_000n,
           bandwidthPpm: 250_000n,
@@ -173,6 +176,7 @@ export function createDemoSnapshot(walletAddress?: string): ProtocolSnapshot {
         claimedAmount: 1_522_000_000_000n,
         claimDeadlineSlot: 348_210_000n,
         epochTokenVault: "EvPCN002Fq7qY5PcnDemo1111111111111111111111",
+        supportFunder: user,
         performanceWeights: {
           uptimePpm: 250_000n,
           bandwidthPpm: 250_000n,

@@ -22,7 +22,7 @@ The program mints PCN tokens to users based on bandwidth measurements submitted 
      - remaining max supply
      - available SOL support
    - PCN tokens are minted into the epoch token vault.
-   - Used SOL stays in the program SOL reserve; unused SOL is refunded.
+   - Used SOL stays in the program SOL reserve; unused SOL is refunded only to the original support funder.
 
 4. **Create claims**
    - The oracle submits four normalized performance metrics for each user.
@@ -38,7 +38,7 @@ The program mints PCN tokens to users based on bandwidth measurements submitted 
 ## Main Accounts
 
 - `Config`: admin, oracle, reward mint, reserves, claim window, curve parameters, and governance performance weights.
-- `Epoch`: epoch status, snapshotted performance weights, oracle-supplied total score, SOL budget, reward pool, claim deadline, and token vault.
+- `Epoch`: epoch status, original support funder, snapshotted performance weights, oracle-supplied total score, SOL budget, reward pool, claim deadline, and token vault.
 - `Claim`: one user's four performance metrics and computed reward weight for one epoch.
 
 ## Emission Multiplier And Performance Scoring

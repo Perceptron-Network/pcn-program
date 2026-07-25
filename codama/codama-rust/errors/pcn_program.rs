@@ -73,9 +73,12 @@ pub enum PcnProgramError {
     /// 6020 - Reward mint or token account does not match config
     #[error("Reward mint or token account does not match config")]
     InvalidTokenAccount = 0x1784,
-    /// 6021 - Arithmetic overflow or underflow
+    /// 6021 - Refund recipient is not the epoch support funder
+    #[error("Refund recipient is not the epoch support funder")]
+    InvalidRefundTarget = 0x1785,
+    /// 6022 - Arithmetic overflow or underflow
     #[error("Arithmetic overflow or underflow")]
-    MathOverflow = 0x1785,
+    MathOverflow = 0x1786,
 }
 
 impl From<PcnProgramError> for solana_program_error::ProgramError {

@@ -56,8 +56,10 @@ export const PCN_PROGRAM_ERROR__CLAIM_ALREADY_REDEEMED = 0x1782; // 6018
 export const PCN_PROGRAM_ERROR__INVALID_CLAIM_ACCOUNT = 0x1783; // 6019
 /** InvalidTokenAccount: Reward mint or token account does not match config */
 export const PCN_PROGRAM_ERROR__INVALID_TOKEN_ACCOUNT = 0x1784; // 6020
+/** InvalidRefundTarget: Refund recipient is not the epoch support funder */
+export const PCN_PROGRAM_ERROR__INVALID_REFUND_TARGET = 0x1785; // 6021
 /** MathOverflow: Arithmetic overflow or underflow */
-export const PCN_PROGRAM_ERROR__MATH_OVERFLOW = 0x1785; // 6021
+export const PCN_PROGRAM_ERROR__MATH_OVERFLOW = 0x1786; // 6022
 
 export type PcnProgramError =
   | typeof PCN_PROGRAM_ERROR__CLAIM_ALREADY_REDEEMED
@@ -73,6 +75,7 @@ export type PcnProgramError =
   | typeof PCN_PROGRAM_ERROR__INVALID_PERFORMANCE_METRICS
   | typeof PCN_PROGRAM_ERROR__INVALID_PERFORMANCE_WEIGHTS
   | typeof PCN_PROGRAM_ERROR__INVALID_PROGRAM_DATA
+  | typeof PCN_PROGRAM_ERROR__INVALID_REFUND_TARGET
   | typeof PCN_PROGRAM_ERROR__INVALID_SUPPORT_BUDGET
   | typeof PCN_PROGRAM_ERROR__INVALID_TOKEN_ACCOUNT
   | typeof PCN_PROGRAM_ERROR__MATH_OVERFLOW
@@ -99,6 +102,7 @@ if (process.env["NODE_ENV"] !== "production") {
     [PCN_PROGRAM_ERROR__INVALID_PERFORMANCE_METRICS]: `Performance metrics must each be between zero and one million ppm`,
     [PCN_PROGRAM_ERROR__INVALID_PERFORMANCE_WEIGHTS]: `Performance weights must each be at most one million ppm and sum to one million ppm`,
     [PCN_PROGRAM_ERROR__INVALID_PROGRAM_DATA]: `ProgramData does not belong to this program`,
+    [PCN_PROGRAM_ERROR__INVALID_REFUND_TARGET]: `Refund recipient is not the epoch support funder`,
     [PCN_PROGRAM_ERROR__INVALID_SUPPORT_BUDGET]: `Invalid support budget`,
     [PCN_PROGRAM_ERROR__INVALID_TOKEN_ACCOUNT]: `Reward mint or token account does not match config`,
     [PCN_PROGRAM_ERROR__MATH_OVERFLOW]: `Arithmetic overflow or underflow`,

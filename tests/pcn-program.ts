@@ -373,9 +373,9 @@ describe("pcn-program", () => {
       .finalizeEpoch({ totalRewardWeight: new BN(totalRewardWeight) })
       .accountsStrict({
         oracle: oracle.publicKey,
-        refundTarget: payer.publicKey,
         config,
         epoch: fx.epoch,
+        supportFunder: payer.publicKey,
         epochTokenVault: fx.epochTokenVault,
         rewardMint: mint.publicKey,
         mintAuthority,

@@ -285,12 +285,17 @@ export async function prepareTransaction(input: {
   if (kind === "finalize") {
     requireRole(wallet, config.oracle, "oracle");
     const epochId = parseUnsignedInteger(values.epochId, "Epoch ID");
-    const refundTarget = publicKey(values.refundTarget, "Refund target");
+    const epoch = snapshot.epochs.find((item) => item.epochId === epochId);
+    if (!epoch) {
+      throw new Error(
+        `Epoch ${epochId} was not found in the current snapshot.`,
+      );
+    }
     const instruction = await getFinalizeEpochInstructionAsync({
       oracle: signer,
-      refundTarget: toAddress(refundTarget),
       config: toAddress(configPda),
       epoch: toAddress(findEpochPda(epochId)),
+      supportFunder: toAddress(epoch.supportFunder),
       epochTokenVault: toAddress(findEpochVaultPda(epochId)),
       rewardMint: toAddress(config.rewardMint),
       mintAuthority: toAddress(findMintAuthorityPda()),
@@ -309,7 +314,11 @@ export async function prepareTransaction(input: {
       [toWeb3Instruction(instruction)],
       [
         { label: "Epoch", value: epochId.toString() },
-        { label: "Refund", value: shortenAddress(refundTarget.toBase58(), 6) },
+        { label: "Total weight", value: values.totalRewardWeight },
+        {
+          label: "Support funder",
+          value: shortenAddress(epoch.supportFunder, 6),
+        },
       ],
     );
   }

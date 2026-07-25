@@ -143,7 +143,6 @@ const ACTION_FIELDS: Record<ActionKind, FieldDefinition[]> = {
   finalize: [
     { key: "epochId", label: "Epoch ID" },
     { key: "totalRewardWeight", label: "Total reward weight" },
-    { key: "refundTarget", label: "Refund target" },
   ],
   "create-claim": [
     { key: "epochId", label: "Epoch ID" },
@@ -223,7 +222,6 @@ function defaultsFor(
     endSlot: (snapshot.slot + 216_000n).toString(),
     supportSol: "1",
     totalRewardWeight: "1000000",
-    refundTarget: walletAddress,
     user: walletAddress,
     uptimePpm: "1000000",
     bandwidthPpm: "1000000",
