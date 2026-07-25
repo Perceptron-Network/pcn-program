@@ -3,7 +3,7 @@ import { PublicKey } from "@solana/web3.js";
 const environment = (import.meta as ImportMeta & { env?: ImportMetaEnv }).env;
 
 export const PCN_PROGRAM_ID = new PublicKey(
-  "86oGodFG8DfLYHAgYwUPCNQzaods7Auxz9cnU7XzWipt",
+  "86oGodFG8DfLYHAgYwUPCNQzaods7Auxz9cnU7XzWipt"
 );
 
 export const RPC_URL =

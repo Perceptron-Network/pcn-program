@@ -143,7 +143,7 @@ test("constructs all seven PCN instruction flows from the Codama client", async 
   };
 
   for (const [action, expectedCount] of Object.entries(
-    expectedInstructionCounts,
+    expectedInstructionCounts
   ) as Array<[ActionKind, number]>) {
     const actionValues = {
       ...values,
@@ -159,7 +159,7 @@ test("constructs all seven PCN instruction flows from the Codama client", async 
     assert.equal(
       prepared.instructions.length,
       expectedCount,
-      `${action} instruction count`,
+      `${action} instruction count`
     );
     assert.equal(prepared.feePayer.toBase58(), wallet.toBase58());
   }
