@@ -10,7 +10,7 @@ import {
 test("formats bigint token values without floating-point loss", () => {
   assert.equal(
     formatDecimalUnits(1_234_567_890_000n, 1_000_000_000n),
-    "1,234.567",
+    "1,234.567"
   );
   assert.equal(formatDecimalUnits(42_000_000_000n, 1_000_000_000n), "42");
 });

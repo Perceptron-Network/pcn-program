@@ -45,7 +45,7 @@ import type {
 
 type FormValues = Record<string, string>;
 const BPF_LOADER_UPGRADEABLE_PROGRAM_ID = new PublicKey(
-  "BPFLoaderUpgradeab1e11111111111111111111111",
+  "BPFLoaderUpgradeab1e11111111111111111111111"
 );
 type KitInstruction = {
   programAddress: Address;
@@ -94,7 +94,7 @@ function requireConfig(snapshot: ProtocolSnapshot) {
 function requireRole(
   wallet: PublicKey,
   expected: string,
-  role: "admin" | "oracle",
+  role: "admin" | "oracle"
 ) {
   if (wallet.toBase58() !== expected) {
     throw new Error(`The connected wallet is not the configured ${role}.`);
@@ -106,29 +106,29 @@ function curveFromForm(values: FormValues) {
     maxEpochMint: parseDecimalUnits(
       values.maxEpochMint,
       TOKEN_DECIMALS,
-      "Max epoch mint",
+      "Max epoch mint"
     ),
     emissionMultiplierPpm: parseUnsignedInteger(
       values.emissionMultiplierPpm,
-      "Emission multiplier",
+      "Emission multiplier"
     ),
     saturationUnits: parseUnsignedInteger(
       values.saturationUnits,
-      "Saturation units",
+      "Saturation units"
     ),
     historyMinted: parseDecimalUnits(
       values.historyMinted,
       TOKEN_DECIMALS,
-      "History minted",
+      "History minted"
     ),
     targetSupportLamportsPerToken: parseUnsignedInteger(
       values.targetSupportLamportsPerToken,
-      "Support lamports per token",
+      "Support lamports per token"
     ),
     maxSupply: parseDecimalUnits(
       values.maxSupply,
       TOKEN_DECIMALS,
-      "Max supply",
+      "Max supply"
     ),
   };
 }
@@ -138,15 +138,15 @@ function performanceWeightsFromForm(values: FormValues) {
     uptimePpm: parseUnsignedInteger(values.uptimeWeightPpm, "Uptime weight"),
     bandwidthPpm: parseUnsignedInteger(
       values.bandwidthWeightPpm,
-      "Bandwidth weight",
+      "Bandwidth weight"
     ),
     fulfilmentRatePpm: parseUnsignedInteger(
       values.fulfilmentRateWeightPpm,
-      "Fulfilment-rate weight",
+      "Fulfilment-rate weight"
     ),
     questScorePpm: parseUnsignedInteger(
       values.questScoreWeightPpm,
-      "Quest-score weight",
+      "Quest-score weight"
     ),
   };
 }
@@ -157,7 +157,7 @@ function baseReview(
   description: string,
   instructions: TransactionInstruction[],
   summary: PreparedTransaction["summary"],
-  extraSigners: Keypair[] = [],
+  extraSigners: Keypair[] = []
 ): PreparedTransaction {
   return {
     action,
@@ -192,7 +192,7 @@ export async function prepareTransaction(input: {
     const oracle = publicKey(values.oracle, "Oracle");
     const [programData] = PublicKey.findProgramAddressSync(
       [PCN_PROGRAM_ID.toBuffer()],
-      BPF_LOADER_UPGRADEABLE_PROGRAM_ID,
+      BPF_LOADER_UPGRADEABLE_PROGRAM_ID
     );
     const instruction = await getInitializeConfigInstructionAsync({
       payer: signer,
@@ -203,7 +203,7 @@ export async function prepareTransaction(input: {
       oracle: toAddress(oracle),
       claimWindowSlots: parseUnsignedInteger(
         values.claimWindowSlots,
-        "Claim window slots",
+        "Claim window slots"
       ),
       curve: curveFromForm(values),
       performanceWeights: performanceWeightsFromForm(values),
@@ -221,7 +221,7 @@ export async function prepareTransaction(input: {
           value: shortenAddress(rewardMint.publicKey.toBase58(), 6),
         },
       ],
-      [rewardMint],
+      [rewardMint]
     );
   }
 
@@ -237,7 +237,7 @@ export async function prepareTransaction(input: {
       oracle: toAddress(oracle),
       claimWindowSlots: parseUnsignedInteger(
         values.claimWindowSlots,
-        "Claim window slots",
+        "Claim window slots"
       ),
       curve: curveFromForm(values),
       performanceWeights: performanceWeightsFromForm(values),
@@ -247,7 +247,7 @@ export async function prepareTransaction(input: {
       "Update protocol settings",
       "Replaces the configured oracle, claim window, and scarcity curve.",
       [toWeb3Instruction(instruction)],
-      [{ label: "Next oracle", value: shortenAddress(oracle.toBase58(), 6) }],
+      [{ label: "Next oracle", value: shortenAddress(oracle.toBase58(), 6) }]
     );
   }
 
@@ -278,7 +278,7 @@ export async function prepareTransaction(input: {
       [
         { label: "Epoch", value: epochId.toString() },
         { label: "Support", value: `${values.supportSol} SOL` },
-      ],
+      ]
     );
   }
 
@@ -288,7 +288,7 @@ export async function prepareTransaction(input: {
     const epoch = snapshot.epochs.find((item) => item.epochId === epochId);
     if (!epoch) {
       throw new Error(
-        `Epoch ${epochId} was not found in the current snapshot.`,
+        `Epoch ${epochId} was not found in the current snapshot.`
       );
     }
     const instruction = await getFinalizeEpochInstructionAsync({
@@ -304,7 +304,7 @@ export async function prepareTransaction(input: {
       systemProgram: toAddress(SystemProgram.programId),
       totalRewardWeight: parseUnsignedInteger(
         values.totalRewardWeight,
-        "Total reward weight",
+        "Total reward weight"
       ),
     });
     return baseReview(
@@ -319,7 +319,7 @@ export async function prepareTransaction(input: {
           label: "Support funder",
           value: shortenAddress(epoch.supportFunder, 6),
         },
-      ],
+      ]
     );
   }
 
@@ -340,15 +340,15 @@ export async function prepareTransaction(input: {
         uptimePpm: parseUnsignedInteger(values.uptimePpm, "Uptime score"),
         bandwidthPpm: parseUnsignedInteger(
           values.bandwidthPpm,
-          "Bandwidth score",
+          "Bandwidth score"
         ),
         fulfilmentRatePpm: parseUnsignedInteger(
           values.fulfilmentRatePpm,
-          "Fulfilment-rate score",
+          "Fulfilment-rate score"
         ),
         questScorePpm: parseUnsignedInteger(
           values.questScorePpm,
-          "Quest score",
+          "Quest score"
         ),
       },
     });
@@ -361,7 +361,7 @@ export async function prepareTransaction(input: {
         { label: "Recipient", value: shortenAddress(user.toBase58(), 6) },
         { label: "Uptime", value: `${values.uptimePpm} ppm` },
         { label: "Bandwidth", value: `${values.bandwidthPpm} ppm` },
-      ],
+      ]
     );
   }
 
@@ -370,7 +370,7 @@ export async function prepareTransaction(input: {
     const epoch = snapshot.epochs.find((item) => item.epochId === epochId);
     if (!epoch) {
       throw new Error(
-        `Epoch ${epochId} was not found in the current snapshot.`,
+        `Epoch ${epochId} was not found in the current snapshot.`
       );
     }
     const claimPda = findClaimPda(epochId, wallet);
@@ -379,7 +379,7 @@ export async function prepareTransaction(input: {
       wallet,
       false,
       TOKEN_PROGRAM_ID,
-      ASSOCIATED_TOKEN_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID
     );
     const instructions: TransactionInstruction[] = [];
     if (!(await connection.getAccountInfo(userTokenAccount, "confirmed"))) {
@@ -390,8 +390,8 @@ export async function prepareTransaction(input: {
           wallet,
           new PublicKey(config.rewardMint),
           TOKEN_PROGRAM_ID,
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-        ),
+          ASSOCIATED_TOKEN_PROGRAM_ID
+        )
       );
     }
     const instruction = await getClaimRewardInstructionAsync({
@@ -417,7 +417,7 @@ export async function prepareTransaction(input: {
           label: "Token account",
           value: shortenAddress(userTokenAccount.toBase58(), 6),
         },
-      ],
+      ]
     );
   }
 
@@ -442,6 +442,6 @@ export async function prepareTransaction(input: {
     `Sweep epoch ${epochId}`,
     "Moves unclaimed PCN into the protocol reserve and permanently closes the epoch claim path.",
     [toWeb3Instruction(instruction)],
-    [{ label: "Epoch", value: epochId.toString() }],
+    [{ label: "Epoch", value: epochId.toString() }]
   );
 }

@@ -24,7 +24,7 @@ import type {
 
 function matchesDiscriminator(
   data: ArrayLike<number>,
-  expected: ArrayLike<number>,
+  expected: ArrayLike<number>
 ) {
   return (
     data.length >= expected.length &&
@@ -212,7 +212,7 @@ export function createDemoSnapshot(walletAddress?: string): ProtocolSnapshot {
 
 export async function loadProtocolSnapshot(
   connection: Connection,
-  walletAddress?: string,
+  walletAddress?: string
 ): Promise<ProtocolSnapshot> {
   const walletKey = walletAddress ? new PublicKey(walletAddress) : null;
   const [slot, programAccounts, walletLamports] = await Promise.all([
@@ -239,7 +239,7 @@ export async function loadProtocolSnapshot(
       console.warn(
         "Ignored malformed PCN account",
         account.pubkey.toBase58(),
-        error,
+        error
       );
     }
   }

@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  "../..",
+  "../.."
 );
 const SRC_ROOT = path.join(PROJECT_ROOT, "src");
 const WALLET_POPUP_CALLS = new Set([
@@ -46,7 +46,7 @@ function walletCallsInsideEffect(filePath: string) {
     readFileSync(filePath, "utf8"),
     ts.ScriptTarget.Latest,
     true,
-    filePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+    filePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS
   );
   const findings: string[] = [];
 
@@ -69,7 +69,7 @@ function walletCallsInsideEffect(filePath: string) {
 
 test("wallet connect, sign, and send calls stay outside useEffect", () => {
   const findings = collectRuntimeSourceFiles(SRC_ROOT).flatMap(
-    walletCallsInsideEffect,
+    walletCallsInsideEffect
   );
   assert.deepEqual(findings, []);
 });
