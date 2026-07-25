@@ -15,7 +15,7 @@ const TOKEN_PROGRAM_ID = new web3.PublicKey(
 );
 const TOKEN_ACCOUNT_LEN = 165;
 const TOKEN_BASE_UNITS = 1_000_000_000;
-const QUALITY_PPM_SCALE = 1_000_000;
+const PERFORMANCE_PPM_SCALE = 1_000_000;
 const PROGRAM_ID = new web3.PublicKey(idl.address);
 const BPF_LOADER_UPGRADEABLE_PROGRAM_ID = new web3.PublicKey(
   "BPFLoaderUpgradeab1e11111111111111111111111"
@@ -48,6 +48,12 @@ describe("pcn-program", () => {
     targetSupportLamportsPerToken: new BN(10_000_000),
     maxSupply: new BN(10 * TOKEN_BASE_UNITS),
   };
+  const performanceWeights = {
+    uptimePpm: new BN(250_000),
+    bandwidthPpm: new BN(250_000),
+    fulfilmentRatePpm: new BN(250_000),
+    questScorePpm: new BN(250_000),
+  };
 
   let nextEpochId = 1;
 
@@ -73,6 +79,7 @@ describe("pcn-program", () => {
           oracle: oracle.publicKey,
           claimWindowSlots: new BN(5),
           curve,
+          performanceWeights,
         })
         .accountsStrict({
           payer: unauthorizedPayer.publicKey,
@@ -98,6 +105,7 @@ describe("pcn-program", () => {
           oracle: oracle.publicKey,
           claimWindowSlots: new BN(5),
           curve,
+          performanceWeights,
         })
         .accountsStrict({
           payer: payer.publicKey,
@@ -122,6 +130,7 @@ describe("pcn-program", () => {
         oracle: oracle.publicKey,
         claimWindowSlots: new BN(5),
         curve,
+        performanceWeights,
       })
       .accountsStrict({
         payer: payer.publicKey,
@@ -156,6 +165,7 @@ describe("pcn-program", () => {
           oracle: null,
           claimWindowSlots: new BN(5),
           curve: null,
+          performanceWeights: null,
         })
         .accountsStrict({
           admin: oracle.publicKey,
@@ -171,6 +181,7 @@ describe("pcn-program", () => {
         oracle: null,
         claimWindowSlots: new BN(5),
         curve: null,
+        performanceWeights: null,
       })
       .accountsStrict({
         admin: admin.publicKey,
@@ -183,7 +194,7 @@ describe("pcn-program", () => {
     expect(updated.claimWindowSlots.toString()).to.equal("5");
   });
 
-  it("finalizes an epoch, creates quality-weighted claims, claims, and sweeps dust", async () => {
+  it("finalizes, creates four-metric claims, claims, and sweeps dust", async () => {
     const fx = await createEpochFixture();
     const reserveBefore = await provider.connection.getBalance(solReserve);
 
@@ -214,10 +225,14 @@ describe("pcn-program", () => {
       fx,
       claimOne,
       fx.userOne.publicKey,
-      50,
-      QUALITY_PPM_SCALE
+      performance(100, 0, 100, 0)
     );
-    await createClaim(fx, claimTwo, fx.userTwo.publicKey, 100, 500_000);
+    await createClaim(
+      fx,
+      claimTwo,
+      fx.userTwo.publicKey,
+      performance(0, 100, 0, 100)
+    );
 
     const firstClaim = await program.account.claim.fetch(claimOne);
     const secondClaim = await program.account.claim.fetch(claimTwo);
@@ -259,7 +274,7 @@ describe("pcn-program", () => {
     expect(await tokenAmount(provider, tokenReserveVault)).to.equal("1");
   });
 
-  it("rejects invalid quality factors and duplicate claims", async () => {
+  it("rejects invalid performance metrics and duplicate claims", async () => {
     const fx = await createEpochFixture();
     await openEpoch(fx, 10_000_000);
     await waitForSlot(provider, 2);
@@ -271,12 +286,22 @@ describe("pcn-program", () => {
       fx.userOne.publicKey.toBuffer(),
     ]);
     await expectRejected(
-      createClaim(fx, claim, fx.userOne.publicKey, 50, QUALITY_PPM_SCALE + 1),
-      "InvalidQualityFactor"
+      createClaim(
+        fx,
+        claim,
+        fx.userOne.publicKey,
+        performance(PERFORMANCE_PPM_SCALE + 1, 50, 50, 50)
+      ),
+      "InvalidPerformanceMetrics"
     );
-    await createClaim(fx, claim, fx.userOne.publicKey, 50, QUALITY_PPM_SCALE);
+    await createClaim(
+      fx,
+      claim,
+      fx.userOne.publicKey,
+      performance(50, 50, 50, 50)
+    );
     await expectRejected(
-      createClaim(fx, claim, fx.userOne.publicKey, 50, QUALITY_PPM_SCALE),
+      createClaim(fx, claim, fx.userOne.publicKey, performance(50, 50, 50, 50)),
       "already in use"
     );
   });
@@ -366,15 +391,13 @@ describe("pcn-program", () => {
     fx: Awaited<ReturnType<typeof createEpochFixture>>,
     claim: web3.PublicKey,
     user: web3.PublicKey,
-    bandwidthUnits: number,
-    qualityFactorPpm: number
+    metrics: ReturnType<typeof performance>
   ) {
     await program.methods
       .createClaim({
         epochId: fx.epochId,
         user,
-        bandwidthUnits: new BN(bandwidthUnits),
-        qualityFactorPpm: new BN(qualityFactorPpm),
+        performance: metrics,
       })
       .accountsStrict({
         oracle: oracle.publicKey,
@@ -423,6 +446,20 @@ function u64(value: BN): Buffer {
   const out = Buffer.alloc(8);
   out.writeBigUInt64LE(BigInt(value.toString()));
   return out;
+}
+
+function performance(
+  uptimePpm: number,
+  bandwidthPpm: number,
+  fulfilmentRatePpm: number,
+  questScorePpm: number
+) {
+  return {
+    uptimePpm: new BN(uptimePpm),
+    bandwidthPpm: new BN(bandwidthPpm),
+    fulfilmentRatePpm: new BN(fulfilmentRatePpm),
+    questScorePpm: new BN(questScorePpm),
+  };
 }
 
 async function createTokenAccount(

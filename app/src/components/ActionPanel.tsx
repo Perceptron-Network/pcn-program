@@ -109,17 +109,30 @@ const CURVE_FIELDS: FieldDefinition[] = [
   { key: "maxSupply", label: "Maximum supply", hint: "PCN" },
 ];
 
+const PERFORMANCE_WEIGHT_FIELDS: FieldDefinition[] = [
+  { key: "uptimeWeightPpm", label: "Uptime weight", hint: "ppm" },
+  { key: "bandwidthWeightPpm", label: "Bandwidth weight", hint: "ppm" },
+  {
+    key: "fulfilmentRateWeightPpm",
+    label: "Fulfilment weight",
+    hint: "ppm",
+  },
+  { key: "questScoreWeightPpm", label: "Quest weight", hint: "ppm" },
+];
+
 const ACTION_FIELDS: Record<ActionKind, FieldDefinition[]> = {
   initialize: [
     { key: "admin", label: "Admin address" },
     { key: "oracle", label: "Oracle address" },
     { key: "claimWindowSlots", label: "Claim window", hint: "slots" },
     ...CURVE_FIELDS,
+    ...PERFORMANCE_WEIGHT_FIELDS,
   ],
   update: [
     { key: "oracle", label: "Oracle address" },
     { key: "claimWindowSlots", label: "Claim window", hint: "slots" },
     ...CURVE_FIELDS,
+    ...PERFORMANCE_WEIGHT_FIELDS,
   ],
   open: [
     { key: "epochId", label: "Epoch ID" },
@@ -135,12 +148,18 @@ const ACTION_FIELDS: Record<ActionKind, FieldDefinition[]> = {
   "create-claim": [
     { key: "epochId", label: "Epoch ID" },
     { key: "user", label: "Recipient address" },
-    { key: "bandwidthUnits", label: "Bandwidth units" },
+    { key: "uptimePpm", label: "Uptime score", hint: "0–1,000,000 ppm" },
     {
-      key: "qualityFactorPpm",
-      label: "Quality factor",
+      key: "bandwidthPpm",
+      label: "Bandwidth score",
       hint: "0–1,000,000 ppm",
     },
+    {
+      key: "fulfilmentRatePpm",
+      label: "Fulfilment score",
+      hint: "0–1,000,000 ppm",
+    },
+    { key: "questScorePpm", label: "Quest score", hint: "0–1,000,000 ppm" },
   ],
   claim: [{ key: "epochId", label: "Epoch ID" }],
   sweep: [{ key: "epochId", label: "Epoch ID" }],
@@ -153,7 +172,7 @@ function toPcnInput(value: bigint) {
 function defaultsFor(
   kind: ActionKind,
   snapshot: ProtocolSnapshot,
-  walletAddress: string
+  walletAddress: string,
 ) {
   const config = snapshot.config;
   const latestEpoch = snapshot.epochs[0];
@@ -165,8 +184,8 @@ function defaultsFor(
     kind === "finalize"
       ? openEpoch?.epochId
       : kind === "claim"
-      ? claim?.epochId
-      : finalizedEpoch?.epochId;
+        ? claim?.epochId
+        : finalizedEpoch?.epochId;
 
   return {
     admin: config?.admin || walletAddress,
@@ -178,12 +197,24 @@ function defaultsFor(
     ).toString(),
     saturationUnits: (config?.curve.saturationUnits || 25_000_000n).toString(),
     historyMinted: toPcnInput(
-      config?.curve.historyMinted || 100_000_000_000_000n
+      config?.curve.historyMinted || 100_000_000_000_000n,
     ),
     targetSupportLamportsPerToken: (
       config?.curve.targetSupportLamportsPerToken || 50_000n
     ).toString(),
     maxSupply: toPcnInput(config?.curve.maxSupply || 1_000_000_000_000_000n),
+    uptimeWeightPpm: (
+      config?.performanceWeights.uptimePpm ?? 250_000n
+    ).toString(),
+    bandwidthWeightPpm: (
+      config?.performanceWeights.bandwidthPpm ?? 250_000n
+    ).toString(),
+    fulfilmentRateWeightPpm: (
+      config?.performanceWeights.fulfilmentRatePpm ?? 250_000n
+    ).toString(),
+    questScoreWeightPpm: (
+      config?.performanceWeights.questScorePpm ?? 250_000n
+    ).toString(),
     epochId: (kind === "open"
       ? nextEpoch
       : defaultEpoch || nextEpoch
@@ -194,8 +225,10 @@ function defaultsFor(
     totalRewardWeight: "1000000",
     refundTarget: walletAddress,
     user: walletAddress,
-    bandwidthUnits: "1000000",
-    qualityFactorPpm: "1000000",
+    uptimePpm: "1000000",
+    bandwidthPpm: "1000000",
+    fulfilmentRatePpm: "1000000",
+    questScorePpm: "1000000",
   };
 }
 
@@ -206,7 +239,7 @@ export function ActionPanel({
   snapshot: ProtocolSnapshot;
   onPrepare: (
     kind: ActionKind,
-    values: Record<string, string>
+    values: Record<string, string>,
   ) => Promise<PreparedTransaction>;
 }) {
   const { publicKey } = useWallet();
@@ -233,7 +266,7 @@ export function ActionPanel({
         setError(
           cause instanceof Error
             ? cause.message
-            : "Unable to prepare transaction."
+            : "Unable to prepare transaction.",
         );
       }
     });

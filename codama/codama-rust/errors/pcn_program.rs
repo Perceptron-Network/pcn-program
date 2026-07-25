@@ -49,30 +49,33 @@ pub enum PcnProgramError {
     /// 6012 - Total reward weight must be greater than zero
     #[error("Total reward weight must be greater than zero")]
     ZeroTotalRewardWeight = 0x177C,
-    /// 6013 - Quality factor exceeds 1.0x
-    #[error("Quality factor exceeds 1.0x")]
-    InvalidQualityFactor = 0x177D,
-    /// 6014 - Reward pool is zero
+    /// 6013 - Performance metrics must each be between zero and one million ppm
+    #[error("Performance metrics must each be between zero and one million ppm")]
+    InvalidPerformanceMetrics = 0x177D,
+    /// 6014 - Performance weights must each be at most one million ppm and sum to one million ppm
+    #[error("Performance weights must each be at most one million ppm and sum to one million ppm")]
+    InvalidPerformanceWeights = 0x177E,
+    /// 6015 - Reward pool is zero
     #[error("Reward pool is zero")]
-    ZeroRewardPool = 0x177E,
-    /// 6015 - Maximum curve supply is exhausted
+    ZeroRewardPool = 0x177F,
+    /// 6016 - Maximum curve supply is exhausted
     #[error("Maximum curve supply is exhausted")]
-    MaxSupplyExhausted = 0x177F,
-    /// 6016 - Claim allocation exceeds epoch reward pool
+    MaxSupplyExhausted = 0x1780,
+    /// 6017 - Claim allocation exceeds epoch reward pool
     #[error("Claim allocation exceeds epoch reward pool")]
-    ClaimOverAllocation = 0x1780,
-    /// 6017 - Claim already redeemed
+    ClaimOverAllocation = 0x1781,
+    /// 6018 - Claim already redeemed
     #[error("Claim already redeemed")]
-    ClaimAlreadyRedeemed = 0x1781,
-    /// 6018 - Claim account does not match epoch or user
+    ClaimAlreadyRedeemed = 0x1782,
+    /// 6019 - Claim account does not match epoch or user
     #[error("Claim account does not match epoch or user")]
-    InvalidClaimAccount = 0x1782,
-    /// 6019 - Reward mint or token account does not match config
+    InvalidClaimAccount = 0x1783,
+    /// 6020 - Reward mint or token account does not match config
     #[error("Reward mint or token account does not match config")]
-    InvalidTokenAccount = 0x1783,
-    /// 6020 - Arithmetic overflow or underflow
+    InvalidTokenAccount = 0x1784,
+    /// 6021 - Arithmetic overflow or underflow
     #[error("Arithmetic overflow or underflow")]
-    MathOverflow = 0x1784,
+    MathOverflow = 0x1785,
 }
 
 impl From<PcnProgramError> for solana_program_error::ProgramError {

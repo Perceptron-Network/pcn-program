@@ -2,8 +2,8 @@ use anchor_lang::{prelude::*, solana_program::program_option::COption};
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::{
-    error::PcnError, program::PcnProgram, Config, CurveParams, SolReserve, CONFIG_SEED,
-    MINT_AUTHORITY_SEED, SOL_RESERVE_SEED, TOKEN_DECIMALS, TOKEN_RESERVE_SEED,
+    error::PcnError, program::PcnProgram, Config, CurveParams, PerformanceWeights, SolReserve,
+    CONFIG_SEED, MINT_AUTHORITY_SEED, SOL_RESERVE_SEED, TOKEN_DECIMALS, TOKEN_RESERVE_SEED,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -12,10 +12,12 @@ pub struct InitializeConfigArgs {
     pub oracle: Pubkey,
     pub claim_window_slots: u64,
     pub curve: CurveParams,
+    pub performance_weights: PerformanceWeights,
 }
 
 pub fn initialize_config(ctx: Context<InitializeConfig>, args: InitializeConfigArgs) -> Result<()> {
     args.curve.validate()?;
+    args.performance_weights.validate()?;
     require!(args.admin != Pubkey::default(), PcnError::UnauthorizedAdmin);
     require!(
         args.oracle != Pubkey::default(),
@@ -44,6 +46,7 @@ pub fn initialize_config(ctx: Context<InitializeConfig>, args: InitializeConfigA
     config.lifetime_curve_minted_amount = 0;
     config.claim_window_slots = args.claim_window_slots;
     config.curve = args.curve;
+    config.performance_weights = args.performance_weights;
     Ok(())
 }
 

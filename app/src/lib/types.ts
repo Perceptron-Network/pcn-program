@@ -3,7 +3,12 @@ import type {
   TransactionInstruction,
   Keypair,
 } from "@solana/web3.js";
-import type { CurveParams, EpochStatus } from "@pcn-client/types";
+import type {
+  CurveParams,
+  EpochStatus,
+  PerformanceMetrics,
+  PerformanceWeights,
+} from "@pcn-client/types";
 
 export type ConfigView = {
   address: string;
@@ -15,6 +20,7 @@ export type ConfigView = {
   lifetimeCurveMintedAmount: bigint;
   claimWindowSlots: bigint;
   curve: CurveParams;
+  performanceWeights: PerformanceWeights;
 };
 
 export type EpochView = {
@@ -31,6 +37,7 @@ export type EpochView = {
   claimedAmount: bigint;
   claimDeadlineSlot: bigint;
   epochTokenVault: string;
+  performanceWeights: PerformanceWeights;
 };
 
 export type ClaimView = {
@@ -38,8 +45,7 @@ export type ClaimView = {
   epoch: string;
   epochId: bigint;
   user: string;
-  bandwidthUnits: bigint;
-  qualityFactorPpm: bigint;
+  performance: PerformanceMetrics;
   rewardWeight: bigint;
   rewardAmount: bigint;
   claimed: boolean;

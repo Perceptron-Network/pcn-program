@@ -76,32 +76,32 @@ pub fn claim_reward(ctx: Context<ClaimReward>, args: ClaimRewardArgs) -> Result<
 pub struct ClaimReward<'info> {
     pub user: Signer<'info>,
     #[account(seeds = [CONFIG_SEED], bump = config.config_bump)]
-    pub config: Account<'info, Config>,
+    pub config: Box<Account<'info, Config>>,
     #[account(
         mut,
         seeds = [EPOCH_SEED, args.epoch_id.to_le_bytes().as_ref()],
         bump = epoch.bump
     )]
-    pub epoch: Account<'info, Epoch>,
+    pub epoch: Box<Account<'info, Epoch>>,
     #[account(
         mut,
         seeds = [CLAIM_SEED, args.epoch_id.to_le_bytes().as_ref(), user.key().as_ref()],
         bump = claim.bump
     )]
-    pub claim: Account<'info, Claim>,
+    pub claim: Box<Account<'info, Claim>>,
     #[account(
         mut,
         address = epoch.epoch_token_vault,
         constraint = epoch_token_vault.mint == config.reward_mint @ PcnError::InvalidTokenAccount,
         constraint = epoch_token_vault.owner == mint_authority.key() @ PcnError::InvalidTokenAccount
     )]
-    pub epoch_token_vault: Account<'info, TokenAccount>,
+    pub epoch_token_vault: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
         constraint = user_token_account.mint == config.reward_mint @ PcnError::InvalidTokenAccount,
         constraint = user_token_account.owner == user.key() @ PcnError::InvalidTokenAccount
     )]
-    pub user_token_account: Account<'info, TokenAccount>,
+    pub user_token_account: Box<Account<'info, TokenAccount>>,
     /// CHECK: PDA signer only; no data is read.
     #[account(seeds = [MINT_AUTHORITY_SEED], bump = config.mint_authority_bump)]
     pub mint_authority: UncheckedAccount<'info>,

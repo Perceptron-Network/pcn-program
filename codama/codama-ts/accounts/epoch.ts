@@ -41,8 +41,12 @@ import {
 import {
   getEpochStatusDecoder,
   getEpochStatusEncoder,
+  getPerformanceWeightsDecoder,
+  getPerformanceWeightsEncoder,
   type EpochStatus,
   type EpochStatusArgs,
+  type PerformanceWeights,
+  type PerformanceWeightsArgs,
 } from "../types";
 
 export const EPOCH_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
@@ -69,6 +73,7 @@ export type Epoch = {
   epochTokenVault: Address;
   epochVaultBump: number;
   bump: number;
+  performanceWeights: PerformanceWeights;
 };
 
 export type EpochArgs = {
@@ -86,6 +91,7 @@ export type EpochArgs = {
   epochTokenVault: Address;
   epochVaultBump: number;
   bump: number;
+  performanceWeights: PerformanceWeightsArgs;
 };
 
 /** Gets the encoder for {@link EpochArgs} account data. */
@@ -107,6 +113,7 @@ export function getEpochEncoder(): FixedSizeEncoder<EpochArgs> {
       ["epochTokenVault", getAddressEncoder()],
       ["epochVaultBump", getU8Encoder()],
       ["bump", getU8Encoder()],
+      ["performanceWeights", getPerformanceWeightsEncoder()],
     ]),
     (value) => ({ ...value, discriminator: EPOCH_DISCRIMINATOR })
   );
@@ -130,6 +137,7 @@ export function getEpochDecoder(): FixedSizeDecoder<Epoch> {
     ["epochTokenVault", getAddressDecoder()],
     ["epochVaultBump", getU8Decoder()],
     ["bump", getU8Decoder()],
+    ["performanceWeights", getPerformanceWeightsDecoder()],
   ]);
 }
 
@@ -192,5 +200,5 @@ export async function fetchAllMaybeEpoch(
 }
 
 export function getEpochSize(): number {
-  return 123;
+  return 155;
 }

@@ -7,6 +7,10 @@
 
 pub(crate) mod r#curve_params;
 pub(crate) mod r#epoch_status;
+pub(crate) mod r#performance_metrics;
+pub(crate) mod r#performance_weights;
 
 pub use self::r#curve_params::*;
 pub use self::r#epoch_status::*;
+pub use self::r#performance_metrics::*;
+pub use self::r#performance_weights::*;

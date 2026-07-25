@@ -41,8 +41,12 @@ import {
 import {
   getCurveParamsDecoder,
   getCurveParamsEncoder,
+  getPerformanceWeightsDecoder,
+  getPerformanceWeightsEncoder,
   type CurveParams,
   type CurveParamsArgs,
+  type PerformanceWeights,
+  type PerformanceWeightsArgs,
 } from "../types";
 
 export const CONFIG_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
@@ -67,6 +71,7 @@ export type Config = {
   lifetimeCurveMintedAmount: bigint;
   claimWindowSlots: bigint;
   curve: CurveParams;
+  performanceWeights: PerformanceWeights;
 };
 
 export type ConfigArgs = {
@@ -82,6 +87,7 @@ export type ConfigArgs = {
   lifetimeCurveMintedAmount: number | bigint;
   claimWindowSlots: number | bigint;
   curve: CurveParamsArgs;
+  performanceWeights: PerformanceWeightsArgs;
 };
 
 /** Gets the encoder for {@link ConfigArgs} account data. */
@@ -101,6 +107,7 @@ export function getConfigEncoder(): FixedSizeEncoder<ConfigArgs> {
       ["lifetimeCurveMintedAmount", getU64Encoder()],
       ["claimWindowSlots", getU64Encoder()],
       ["curve", getCurveParamsEncoder()],
+      ["performanceWeights", getPerformanceWeightsEncoder()],
     ]),
     (value) => ({ ...value, discriminator: CONFIG_DISCRIMINATOR })
   );
@@ -122,6 +129,7 @@ export function getConfigDecoder(): FixedSizeDecoder<Config> {
     ["lifetimeCurveMintedAmount", getU64Decoder()],
     ["claimWindowSlots", getU64Decoder()],
     ["curve", getCurveParamsDecoder()],
+    ["performanceWeights", getPerformanceWeightsDecoder()],
   ]);
 }
 
@@ -184,5 +192,5 @@ export async function fetchAllMaybeConfig(
 }
 
 export function getConfigSize(): number {
-  return 236;
+  return 268;
 }

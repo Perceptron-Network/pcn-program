@@ -40,22 +40,24 @@ export const PCN_PROGRAM_ERROR__CLAIM_DEADLINE_PASSED = 0x177a; // 6010
 export const PCN_PROGRAM_ERROR__CLAIM_WINDOW_STILL_OPEN = 0x177b; // 6011
 /** ZeroTotalRewardWeight: Total reward weight must be greater than zero */
 export const PCN_PROGRAM_ERROR__ZERO_TOTAL_REWARD_WEIGHT = 0x177c; // 6012
-/** InvalidQualityFactor: Quality factor exceeds 1.0x */
-export const PCN_PROGRAM_ERROR__INVALID_QUALITY_FACTOR = 0x177d; // 6013
+/** InvalidPerformanceMetrics: Performance metrics must each be between zero and one million ppm */
+export const PCN_PROGRAM_ERROR__INVALID_PERFORMANCE_METRICS = 0x177d; // 6013
+/** InvalidPerformanceWeights: Performance weights must each be at most one million ppm and sum to one million ppm */
+export const PCN_PROGRAM_ERROR__INVALID_PERFORMANCE_WEIGHTS = 0x177e; // 6014
 /** ZeroRewardPool: Reward pool is zero */
-export const PCN_PROGRAM_ERROR__ZERO_REWARD_POOL = 0x177e; // 6014
+export const PCN_PROGRAM_ERROR__ZERO_REWARD_POOL = 0x177f; // 6015
 /** MaxSupplyExhausted: Maximum curve supply is exhausted */
-export const PCN_PROGRAM_ERROR__MAX_SUPPLY_EXHAUSTED = 0x177f; // 6015
+export const PCN_PROGRAM_ERROR__MAX_SUPPLY_EXHAUSTED = 0x1780; // 6016
 /** ClaimOverAllocation: Claim allocation exceeds epoch reward pool */
-export const PCN_PROGRAM_ERROR__CLAIM_OVER_ALLOCATION = 0x1780; // 6016
+export const PCN_PROGRAM_ERROR__CLAIM_OVER_ALLOCATION = 0x1781; // 6017
 /** ClaimAlreadyRedeemed: Claim already redeemed */
-export const PCN_PROGRAM_ERROR__CLAIM_ALREADY_REDEEMED = 0x1781; // 6017
+export const PCN_PROGRAM_ERROR__CLAIM_ALREADY_REDEEMED = 0x1782; // 6018
 /** InvalidClaimAccount: Claim account does not match epoch or user */
-export const PCN_PROGRAM_ERROR__INVALID_CLAIM_ACCOUNT = 0x1782; // 6018
+export const PCN_PROGRAM_ERROR__INVALID_CLAIM_ACCOUNT = 0x1783; // 6019
 /** InvalidTokenAccount: Reward mint or token account does not match config */
-export const PCN_PROGRAM_ERROR__INVALID_TOKEN_ACCOUNT = 0x1783; // 6019
+export const PCN_PROGRAM_ERROR__INVALID_TOKEN_ACCOUNT = 0x1784; // 6020
 /** MathOverflow: Arithmetic overflow or underflow */
-export const PCN_PROGRAM_ERROR__MATH_OVERFLOW = 0x1784; // 6020
+export const PCN_PROGRAM_ERROR__MATH_OVERFLOW = 0x1785; // 6021
 
 export type PcnProgramError =
   | typeof PCN_PROGRAM_ERROR__CLAIM_ALREADY_REDEEMED
@@ -68,8 +70,9 @@ export type PcnProgramError =
   | typeof PCN_PROGRAM_ERROR__INVALID_CLAIM_WINDOW
   | typeof PCN_PROGRAM_ERROR__INVALID_CURVE_PARAMS
   | typeof PCN_PROGRAM_ERROR__INVALID_EPOCH_WINDOW
+  | typeof PCN_PROGRAM_ERROR__INVALID_PERFORMANCE_METRICS
+  | typeof PCN_PROGRAM_ERROR__INVALID_PERFORMANCE_WEIGHTS
   | typeof PCN_PROGRAM_ERROR__INVALID_PROGRAM_DATA
-  | typeof PCN_PROGRAM_ERROR__INVALID_QUALITY_FACTOR
   | typeof PCN_PROGRAM_ERROR__INVALID_SUPPORT_BUDGET
   | typeof PCN_PROGRAM_ERROR__INVALID_TOKEN_ACCOUNT
   | typeof PCN_PROGRAM_ERROR__MATH_OVERFLOW
@@ -93,8 +96,9 @@ if (process.env["NODE_ENV"] !== "production") {
     [PCN_PROGRAM_ERROR__INVALID_CLAIM_WINDOW]: `Invalid claim window`,
     [PCN_PROGRAM_ERROR__INVALID_CURVE_PARAMS]: `Invalid curve parameters`,
     [PCN_PROGRAM_ERROR__INVALID_EPOCH_WINDOW]: `Invalid epoch slot window`,
+    [PCN_PROGRAM_ERROR__INVALID_PERFORMANCE_METRICS]: `Performance metrics must each be between zero and one million ppm`,
+    [PCN_PROGRAM_ERROR__INVALID_PERFORMANCE_WEIGHTS]: `Performance weights must each be at most one million ppm and sum to one million ppm`,
     [PCN_PROGRAM_ERROR__INVALID_PROGRAM_DATA]: `ProgramData does not belong to this program`,
-    [PCN_PROGRAM_ERROR__INVALID_QUALITY_FACTOR]: `Quality factor exceeds 1.0x`,
     [PCN_PROGRAM_ERROR__INVALID_SUPPORT_BUDGET]: `Invalid support budget`,
     [PCN_PROGRAM_ERROR__INVALID_TOKEN_ACCOUNT]: `Reward mint or token account does not match config`,
     [PCN_PROGRAM_ERROR__MATH_OVERFLOW]: `Arithmetic overflow or underflow`,

@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{error::PcnError, EMISSION_MULTIPLIER_PPM_SCALE};
+use crate::{error::PcnError, EMISSION_MULTIPLIER_PPM_SCALE, PERFORMANCE_PPM_SCALE};
 
 #[account]
 #[derive(Debug, InitSpace)]
@@ -17,6 +17,7 @@ pub struct Config {
     pub lifetime_curve_minted_amount: u64,
     pub claim_window_slots: u64,
     pub curve: CurveParams,
+    pub performance_weights: PerformanceWeights,
 }
 
 impl Config {
@@ -31,6 +32,50 @@ pub struct CurveParams {
     pub history_minted: u64,
     pub target_support_lamports_per_token: u64,
     pub max_supply: u64,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq, InitSpace)]
+pub struct PerformanceWeights {
+    pub uptime_ppm: u64,
+    pub bandwidth_ppm: u64,
+    pub fulfilment_rate_ppm: u64,
+    pub quest_score_ppm: u64,
+}
+
+impl PerformanceWeights {
+    pub fn validate(&self) -> Result<()> {
+        let total = self
+            .uptime_ppm
+            .checked_add(self.bandwidth_ppm)
+            .and_then(|value| value.checked_add(self.fulfilment_rate_ppm))
+            .and_then(|value| value.checked_add(self.quest_score_ppm))
+            .ok_or(PcnError::MathOverflow)?;
+        require!(
+            self.uptime_ppm <= PERFORMANCE_PPM_SCALE
+                && self.bandwidth_ppm <= PERFORMANCE_PPM_SCALE
+                && self.fulfilment_rate_ppm <= PERFORMANCE_PPM_SCALE
+                && self.quest_score_ppm <= PERFORMANCE_PPM_SCALE
+                && total == PERFORMANCE_PPM_SCALE,
+            PcnError::InvalidPerformanceWeights
+        );
+        Ok(())
+    }
+}
+
+impl CurveParams {
+    pub fn validate(&self) -> Result<()> {
+        require!(
+            self.max_epoch_mint > 0
+                && self.emission_multiplier_ppm > 0
+                && self.emission_multiplier_ppm <= EMISSION_MULTIPLIER_PPM_SCALE
+                && self.saturation_units > 0
+                && self.history_minted > 0
+                && self.target_support_lamports_per_token > 0
+                && self.max_supply > 0,
+            PcnError::InvalidCurveParams
+        );
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -59,32 +104,27 @@ mod tests {
                 target_support_lamports_per_token: u64::MAX,
                 max_supply: u64::MAX,
             },
+            performance_weights: PerformanceWeights {
+                uptime_ppm: 250_000,
+                bandwidth_ppm: 250_000,
+                fulfilment_rate_ppm: 250_000,
+                quest_score_ppm: 250_000,
+            },
         };
 
         assert_eq!(serialized_len(&config), Config::INIT_SPACE);
+        assert_eq!(Config::INIT_SPACE, 260);
         assert_eq!(Config::LEN, 8 + Config::INIT_SPACE);
         assert_eq!(serialized_len(&config.curve), CurveParams::INIT_SPACE);
+        assert_eq!(
+            serialized_len(&config.performance_weights),
+            PerformanceWeights::INIT_SPACE
+        );
     }
 
     fn serialized_len(value: &impl AnchorSerialize) -> usize {
         let mut data = Vec::new();
         value.serialize(&mut data).unwrap();
         data.len()
-    }
-}
-
-impl CurveParams {
-    pub fn validate(&self) -> Result<()> {
-        require!(
-            self.max_epoch_mint > 0
-                && self.emission_multiplier_ppm > 0
-                && self.emission_multiplier_ppm <= EMISSION_MULTIPLIER_PPM_SCALE
-                && self.saturation_units > 0
-                && self.history_minted > 0
-                && self.target_support_lamports_per_token > 0
-                && self.max_supply > 0,
-            PcnError::InvalidCurveParams
-        );
-        Ok(())
     }
 }

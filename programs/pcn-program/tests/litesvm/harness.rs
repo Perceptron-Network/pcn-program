@@ -32,6 +32,7 @@ pub struct PcnTestContext {
     pub sol_reserve: anchor_lang::prelude::Pubkey,
     pub token_reserve_vault: anchor_lang::prelude::Pubkey,
     pub curve: pcn_program::CurveParams,
+    pub performance_weights: pcn_program::PerformanceWeights,
 }
 
 pub struct EpochFixture {
@@ -62,6 +63,7 @@ pub fn setup_pcn_litesvm() -> Option<PcnTestContext> {
     let sol_reserve = pda(&[pcn_program::SOL_RESERVE_SEED]);
     let token_reserve_vault = pda(&[pcn_program::TOKEN_RESERVE_SEED]);
     let curve = test_curve();
+    let performance_weights = equal_performance_weights();
 
     let init_ix = Instruction::new_with_bytes(
         program_id,
@@ -71,6 +73,7 @@ pub fn setup_pcn_litesvm() -> Option<PcnTestContext> {
                 oracle: oracle.pubkey(),
                 claim_window_slots: 5,
                 curve,
+                performance_weights,
             },
         }
         .data(),
@@ -101,6 +104,7 @@ pub fn setup_pcn_litesvm() -> Option<PcnTestContext> {
         sol_reserve,
         token_reserve_vault,
         curve,
+        performance_weights,
     })
 }
 
@@ -209,11 +213,10 @@ pub fn create_claim(
     ctx: &mut PcnTestContext,
     epoch: &EpochFixture,
     user: anchor_lang::prelude::Pubkey,
-    bandwidth_units: u64,
-    quality_factor_ppm: u64,
+    performance: pcn_program::PerformanceMetrics,
 ) -> anchor_lang::prelude::Pubkey {
     let claim = claim_pda(epoch.epoch_id, &user);
-    let ix = create_claim_ix(ctx, epoch, claim, user, bandwidth_units, quality_factor_ppm);
+    let ix = create_claim_ix(ctx, epoch, claim, user, performance);
     send(
         &mut ctx.svm,
         &ctx.payer,
@@ -227,11 +230,10 @@ pub fn create_claim_result(
     ctx: &mut PcnTestContext,
     epoch: &EpochFixture,
     user: anchor_lang::prelude::Pubkey,
-    bandwidth_units: u64,
-    quality_factor_ppm: u64,
+    performance: pcn_program::PerformanceMetrics,
 ) -> TransactionResult {
     let claim = claim_pda(epoch.epoch_id, &user);
-    let ix = create_claim_ix(ctx, epoch, claim, user, bandwidth_units, quality_factor_ppm);
+    let ix = create_claim_ix(ctx, epoch, claim, user, performance);
     send_result(
         &mut ctx.svm,
         &ctx.payer,
@@ -404,8 +406,7 @@ fn create_claim_ix(
     epoch: &EpochFixture,
     claim: anchor_lang::prelude::Pubkey,
     user: anchor_lang::prelude::Pubkey,
-    bandwidth_units: u64,
-    quality_factor_ppm: u64,
+    performance: pcn_program::PerformanceMetrics,
 ) -> Instruction {
     Instruction::new_with_bytes(
         pcn_program::id(),
@@ -413,8 +414,7 @@ fn create_claim_ix(
             args: pcn_program::CreateClaimArgs {
                 epoch_id: epoch.epoch_id,
                 user,
-                bandwidth_units,
-                quality_factor_ppm,
+                performance,
             },
         }
         .data(),
@@ -537,5 +537,28 @@ fn test_curve() -> pcn_program::CurveParams {
         history_minted: pcn_program::TOKEN_BASE_UNITS,
         target_support_lamports_per_token: 10_000_000,
         max_supply: 10 * pcn_program::TOKEN_BASE_UNITS,
+    }
+}
+
+pub fn equal_performance_weights() -> pcn_program::PerformanceWeights {
+    pcn_program::PerformanceWeights {
+        uptime_ppm: 250_000,
+        bandwidth_ppm: 250_000,
+        fulfilment_rate_ppm: 250_000,
+        quest_score_ppm: 250_000,
+    }
+}
+
+pub fn performance(
+    uptime_ppm: u64,
+    bandwidth_ppm: u64,
+    fulfilment_rate_ppm: u64,
+    quest_score_ppm: u64,
+) -> pcn_program::PerformanceMetrics {
+    pcn_program::PerformanceMetrics {
+        uptime_ppm,
+        bandwidth_ppm,
+        fulfilment_rate_ppm,
+        quest_score_ppm,
     }
 }

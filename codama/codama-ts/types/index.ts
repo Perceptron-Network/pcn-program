@@ -8,3 +8,5 @@
 
 export * from "./curveParams";
 export * from "./epochStatus";
+export * from "./performanceMetrics";
+export * from "./performanceWeights";

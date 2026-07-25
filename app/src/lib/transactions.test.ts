@@ -29,6 +29,12 @@ const snapshot: ProtocolSnapshot = {
       targetSupportLamportsPerToken: 50_000n,
       maxSupply: 10_000_000_000_000n,
     },
+    performanceWeights: {
+      uptimePpm: 250_000n,
+      bandwidthPpm: 250_000n,
+      fulfilmentRatePpm: 250_000n,
+      questScorePpm: 250_000n,
+    },
   },
   epochs: [
     {
@@ -45,6 +51,12 @@ const snapshot: ProtocolSnapshot = {
       claimedAmount: 0n,
       claimDeadlineSlot: 11_000n,
       epochTokenVault: epochVault,
+      performanceWeights: {
+        uptimePpm: 250_000n,
+        bandwidthPpm: 250_000n,
+        fulfilmentRatePpm: 250_000n,
+        questScorePpm: 250_000n,
+      },
     },
     {
       address: Keypair.generate().publicKey.toBase58(),
@@ -60,6 +72,12 @@ const snapshot: ProtocolSnapshot = {
       claimedAmount: 0n,
       claimDeadlineSlot: 0n,
       epochTokenVault: Keypair.generate().publicKey.toBase58(),
+      performanceWeights: {
+        uptimePpm: 250_000n,
+        bandwidthPpm: 250_000n,
+        fulfilmentRatePpm: 250_000n,
+        questScorePpm: 250_000n,
+      },
     },
   ],
   claims: [],
@@ -80,6 +98,10 @@ const values = {
   historyMinted: "1000",
   targetSupportLamportsPerToken: "50000",
   maxSupply: "10000",
+  uptimeWeightPpm: "250000",
+  bandwidthWeightPpm: "250000",
+  fulfilmentRateWeightPpm: "250000",
+  questScoreWeightPpm: "250000",
   epochId: "7",
   startSlot: "10000",
   endSlot: "11000",
@@ -87,8 +109,10 @@ const values = {
   totalRewardWeight: "1000",
   refundTarget: wallet.toBase58(),
   user: wallet.toBase58(),
-  bandwidthUnits: "1000",
-  qualityFactorPpm: "950000",
+  uptimePpm: "950000",
+  bandwidthPpm: "900000",
+  fulfilmentRatePpm: "925000",
+  questScorePpm: "975000",
 };
 
 const connection = {
@@ -118,7 +142,7 @@ test("constructs all seven PCN instruction flows from the Codama client", async 
   };
 
   for (const [action, expectedCount] of Object.entries(
-    expectedInstructionCounts
+    expectedInstructionCounts,
   ) as Array<[ActionKind, number]>) {
     const actionValues = {
       ...values,
@@ -134,7 +158,7 @@ test("constructs all seven PCN instruction flows from the Codama client", async 
     assert.equal(
       prepared.instructions.length,
       expectedCount,
-      `${action} instruction count`
+      `${action} instruction count`,
     );
     assert.equal(prepared.feePayer.toBase58(), wallet.toBase58());
   }
