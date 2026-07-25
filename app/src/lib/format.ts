@@ -12,14 +12,14 @@ export function shortenAddress(value: string, size = 4) {
 
 export function formatInteger(value: bigint | number) {
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(
-    value,
+    value
   );
 }
 
 export function formatDecimalUnits(
   value: bigint,
   scale: bigint,
-  maximumFractionDigits = 3,
+  maximumFractionDigits = 3
 ) {
   const whole = value / scale;
   const remainder = value % scale;
@@ -56,7 +56,7 @@ export function parseUnsignedInteger(value: string, label: string) {
 export function parseDecimalUnits(
   value: string,
   decimals: number,
-  label: string,
+  label: string
 ) {
   const normalized = value.trim();
   if (!DECIMAL_PATTERN.test(normalized)) {
