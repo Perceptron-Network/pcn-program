@@ -1,6 +1,7 @@
 #[path = "harness.rs"]
 mod harness;
 
+use anchor_lang::prelude::Pubkey;
 use harness::*;
 use solana_signer::Signer;
 
@@ -48,4 +49,28 @@ fn finalize_refunds_only_the_original_support_funder_in_litesvm() {
     finalize_epoch(&mut ctx, &epoch, 100);
     let finalized: pcn_program::Epoch = get_anchor_account(&ctx.svm, &epoch.epoch);
     assert_eq!(finalized.support_funder, ctx.payer.pubkey());
+}
+
+#[test]
+fn finalize_refunds_recorded_funder_after_ownership_changes_in_litesvm() {
+    let Some(mut ctx) = setup_pcn_litesvm() else {
+        eprintln!("skipping LiteSVM test; run `anchor test` first");
+        return;
+    };
+    let epoch = create_epoch_fixture(&mut ctx, 1);
+    let funder = solana_keypair::Keypair::new();
+    ctx.svm.airdrop(&funder.pubkey(), 100_000_000).unwrap();
+    open_epoch_with_funder(&mut ctx, &epoch, &funder, 10_000_000);
+
+    let mut funder_account = ctx.svm.get_account(&funder.pubkey()).unwrap();
+    funder_account.owner = Pubkey::new_unique();
+    ctx.svm
+        .set_account(funder.pubkey(), funder_account)
+        .unwrap();
+    let balance_before_refund = ctx.svm.get_balance(&funder.pubkey()).unwrap();
+
+    ctx.svm.warp_to_slot(2);
+    let result = finalize_epoch_with_funder_result(&mut ctx, &epoch, funder.pubkey(), 100);
+    assert!(result.is_ok(), "finalize failed: {result:?}");
+    assert!(ctx.svm.get_balance(&funder.pubkey()).unwrap() > balance_before_refund);
 }
