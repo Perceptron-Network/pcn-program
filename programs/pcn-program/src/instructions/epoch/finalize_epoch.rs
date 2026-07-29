@@ -102,7 +102,8 @@ pub struct FinalizeEpoch<'info> {
         mut,
         address = epoch.support_funder @ PcnError::InvalidRefundTarget
     )]
-    pub support_funder: SystemAccount<'info>,
+    /// CHECK: Address constrained to the immutable epoch funder; lamports are only credited.
+    pub support_funder: UncheckedAccount<'info>,
     #[account(
         mut,
         address = epoch.epoch_token_vault,

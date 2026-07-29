@@ -170,7 +170,13 @@ pub fn create_epoch_fixture(ctx: &mut PcnTestContext, epoch_id: u64) -> EpochFix
 }
 
 pub fn open_epoch(ctx: &mut PcnTestContext, epoch: &EpochFixture, support_budget_lamports: u64) {
-    let ix = open_epoch_ix(ctx, epoch, ctx.oracle.pubkey(), support_budget_lamports);
+    let ix = open_epoch_ix(
+        ctx,
+        epoch,
+        ctx.oracle.pubkey(),
+        ctx.payer.pubkey(),
+        support_budget_lamports,
+    );
     send(
         &mut ctx.svm,
         &ctx.payer,
@@ -185,8 +191,35 @@ pub fn open_epoch_result(
     oracle: &Keypair,
     support_budget_lamports: u64,
 ) -> TransactionResult {
-    let ix = open_epoch_ix(ctx, epoch, oracle.pubkey(), support_budget_lamports);
+    let ix = open_epoch_ix(
+        ctx,
+        epoch,
+        oracle.pubkey(),
+        ctx.payer.pubkey(),
+        support_budget_lamports,
+    );
     send_result(&mut ctx.svm, &ctx.payer, vec![ix], &[&ctx.payer, oracle])
+}
+
+pub fn open_epoch_with_funder(
+    ctx: &mut PcnTestContext,
+    epoch: &EpochFixture,
+    funder: &Keypair,
+    support_budget_lamports: u64,
+) {
+    let ix = open_epoch_ix(
+        ctx,
+        epoch,
+        ctx.oracle.pubkey(),
+        funder.pubkey(),
+        support_budget_lamports,
+    );
+    send(
+        &mut ctx.svm,
+        &ctx.payer,
+        vec![ix],
+        &[&ctx.payer, &ctx.oracle, funder],
+    );
 }
 
 pub fn finalize_epoch(ctx: &mut PcnTestContext, epoch: &EpochFixture, total_reward_weight: u64) {
@@ -376,6 +409,7 @@ fn open_epoch_ix(
     ctx: &PcnTestContext,
     epoch: &EpochFixture,
     oracle: anchor_lang::prelude::Pubkey,
+    funder: anchor_lang::prelude::Pubkey,
     support_budget_lamports: u64,
 ) -> Instruction {
     Instruction::new_with_bytes(
@@ -391,7 +425,7 @@ fn open_epoch_ix(
         .data(),
         pcn_program::accounts::OpenEpoch {
             oracle,
-            funder: ctx.payer.pubkey(),
+            funder,
             config: ctx.config,
             epoch: epoch.epoch,
             epoch_token_vault: epoch.epoch_token_vault,
