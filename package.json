@@ -17,8 +17,8 @@
   },
   "dependencies": {
     "@anchor-lang/core": "^1.0.2",
-    "@solana/kit": "^6.8.0",
-    "@solana/program-client-core": "^6.8.0"
+    "@solana/kit": "^8.2.0",
+    "@solana/program-client-core": "^8.2.0"
   },
   "devDependencies": {
     "@codama/nodes-from-anchor": "^1.4.1",

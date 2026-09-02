@@ -13,7 +13,7 @@ import {
   getClaimDecoder,
 } from "@pcn-client/accounts/claim";
 import { EpochStatus } from "@pcn-client/types/epochStatus";
-import { PCN_PROGRAM_ID } from "./config";
+import { DEFAULT_CLAIM_WINDOW_SLOTS, PCN_PROGRAM_ID } from "./config";
 import { findConfigPda } from "./pdas";
 import type {
   ClaimView,
@@ -101,7 +101,7 @@ export function createDemoSnapshot(walletAddress?: string): ProtocolSnapshot {
       solReserve: "4sPCNreserveh3hQ2wKxPcnDemo11111111111111111",
       tokenReserveVault: "9vPCNreserveX5m3gPcnDemo111111111111111111",
       lifetimeCurveMintedAmount: 18_420_500_000_000n,
-      claimWindowSlots: 216_000n,
+      claimWindowSlots: DEFAULT_CLAIM_WINDOW_SLOTS,
       curve: {
         maxEpochMint: 2_500_000_000_000n,
         emissionMultiplierPpm: 1_000_000n,

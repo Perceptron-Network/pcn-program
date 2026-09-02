@@ -17,6 +17,7 @@ import {
   type ComponentType,
   type SVGProps,
 } from "react";
+import { DEFAULT_CLAIM_WINDOW_SLOTS } from "@/lib/config";
 import { formatDecimalUnits } from "@/lib/format";
 import type {
   ActionKind,
@@ -189,7 +190,9 @@ function defaultsFor(
   return {
     admin: config?.admin || walletAddress,
     oracle: config?.oracle || walletAddress,
-    claimWindowSlots: (config?.claimWindowSlots || 216_000n).toString(),
+    claimWindowSlots: (
+      config?.claimWindowSlots || DEFAULT_CLAIM_WINDOW_SLOTS
+    ).toString(),
     maxEpochMint: toPcnInput(config?.curve.maxEpochMint || 2_500_000_000_000n),
     emissionMultiplierPpm: (
       config?.curve.emissionMultiplierPpm || 1_000_000n
@@ -219,7 +222,7 @@ function defaultsFor(
       : defaultEpoch || nextEpoch
     ).toString(),
     startSlot: snapshot.slot.toString(),
-    endSlot: (snapshot.slot + 216_000n).toString(),
+    endSlot: (snapshot.slot + DEFAULT_CLAIM_WINDOW_SLOTS).toString(),
     supportSol: "1",
     totalRewardWeight: "1000000",
     user: walletAddress,
