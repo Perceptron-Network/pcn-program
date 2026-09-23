@@ -14,7 +14,7 @@ const TOKEN_PROGRAM_ID = new web3.PublicKey(
   "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
 );
 const TOKEN_ACCOUNT_LEN = 165;
-const TOKEN_BASE_UNITS = 1_000_000_000;
+const TOKEN_BASE_UNITS = 1_000_000;
 const PERFORMANCE_PPM_SCALE = 1_000_000;
 const PROGRAM_ID = new web3.PublicKey(idl.address);
 const BPF_LOADER_UPGRADEABLE_PROGRAM_ID = new web3.PublicKey(
@@ -203,7 +203,7 @@ describe("pcn-program", () => {
     await finalizeEpoch(fx, 100);
 
     const finalized = await program.account.epoch.fetch(fx.epoch);
-    expect(finalized.rewardPoolAmount.toString()).to.equal("632120559");
+    expect(finalized.rewardPoolAmount.toString()).to.equal("632121");
     expect(finalized.totalRewardWeight.toString()).to.equal("100");
     const reserveAfter = await provider.connection.getBalance(solReserve);
     expect(reserveAfter - reserveBefore).to.equal(
@@ -238,17 +238,17 @@ describe("pcn-program", () => {
     const secondClaim = await program.account.claim.fetch(claimTwo);
     expect(firstClaim.rewardWeight.toString()).to.equal("50");
     expect(secondClaim.rewardWeight.toString()).to.equal("50");
-    expect(firstClaim.rewardAmount.toString()).to.equal("316060279");
-    expect(secondClaim.rewardAmount.toString()).to.equal("316060279");
+    expect(firstClaim.rewardAmount.toString()).to.equal("316060");
+    expect(secondClaim.rewardAmount.toString()).to.equal("316060");
 
     await claimReward(fx, claimOne, fx.userOne, fx.userOneToken.publicKey);
     await claimReward(fx, claimTwo, fx.userTwo, fx.userTwoToken.publicKey);
 
     expect(await tokenAmount(provider, fx.userOneToken.publicKey)).to.equal(
-      "316060279"
+      "316060"
     );
     expect(await tokenAmount(provider, fx.userTwoToken.publicKey)).to.equal(
-      "316060279"
+      "316060"
     );
     expect(await tokenAmount(provider, fx.epochTokenVault)).to.equal("1");
 

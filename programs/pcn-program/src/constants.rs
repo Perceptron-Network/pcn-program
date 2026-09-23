@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 
 #[constant]
-pub const TOKEN_DECIMALS: u8 = 9;
-pub const TOKEN_BASE_UNITS: u64 = 1_000_000_000;
+pub const TOKEN_DECIMALS: u8 = 6;
+pub const TOKEN_BASE_UNITS: u64 = 1_000_000;
 pub const PERFORMANCE_PPM_SCALE: u64 = 1_000_000;
 pub const EMISSION_MULTIPLIER_PPM_SCALE: u64 = 1_000_000;
 

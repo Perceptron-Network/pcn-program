@@ -348,8 +348,8 @@ mod tests {
         let high = calculate_scarcity_cap(params, 10_000, 0).unwrap();
         let saturated = calculate_scarcity_cap(params, 1_000_000, 0).unwrap();
 
-        assert_eq!(low, 95_162_581_964);
-        assert_eq!(high, 632_120_558_829);
+        assert_eq!(low, 95_162_582);
+        assert_eq!(high, 632_120_559);
         assert!(high > low);
         assert_eq!(saturated, params.max_epoch_mint);
     }
@@ -360,8 +360,8 @@ mod tests {
         let low_history = calculate_scarcity_cap(params, 10_000, 0).unwrap();
         let high_history = calculate_scarcity_cap(params, 10_000, params.history_minted).unwrap();
 
-        assert_eq!(low_history, 632_120_558_829);
-        assert_eq!(high_history, 316_060_279_414);
+        assert_eq!(low_history, 632_120_559);
+        assert_eq!(high_history, 316_060_279);
         assert!(high_history < low_history);
     }
 
@@ -369,7 +369,7 @@ mod tests {
     fn emission_multiplier_one_preserves_and_reduced_multiplier_scales_curve() {
         let full = curve();
         let full_cap = calculate_scarcity_cap(full, 10_000, 0).unwrap();
-        assert_eq!(full_cap, 632_120_558_829);
+        assert_eq!(full_cap, 632_120_559);
 
         let reduced = CurveParams {
             emission_multiplier_ppm: 500_000,
@@ -377,7 +377,7 @@ mod tests {
         };
         assert_eq!(
             calculate_scarcity_cap(reduced, 10_000, 0).unwrap(),
-            316_060_279_414
+            316_060_279
         );
     }
 
@@ -501,7 +501,7 @@ mod tests {
             calculate_consumed_support(params, TOKEN_BASE_UNITS).unwrap(),
             50_000_000
         );
-        assert_eq!(calculate_consumed_support(params, 1).unwrap(), 1);
+        assert_eq!(calculate_consumed_support(params, 1).unwrap(), 50);
     }
 
     #[test]
@@ -510,7 +510,7 @@ mod tests {
         let abundant_support = 10_000 * params.target_support_lamports_per_token;
         let pool = compute_reward_pool(params, 10_000, 0, abundant_support).unwrap();
 
-        assert_eq!(pool.scarcity_cap, 632_120_558_829);
+        assert_eq!(pool.scarcity_cap, 632_120_559);
         assert_eq!(pool.reward_pool, pool.scarcity_cap);
 
         let support_limited = compute_reward_pool(
