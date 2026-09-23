@@ -8,7 +8,7 @@ The program mints PCN tokens to users based on bandwidth measurements submitted 
 
 1. **Initialize config**
    - The program upgrade authority creates the program config and selects the admin.
-   - The program creates a 9-decimal SPL reward mint, a mint-authority PDA, a SOL reserve, and a token reserve vault.
+   - The program creates a 6-decimal SPL reward mint, a mint-authority PDA, a SOL reserve, and a token reserve vault.
 
 2. **Open an epoch**
    - The configured oracle opens an epoch.

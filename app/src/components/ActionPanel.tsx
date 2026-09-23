@@ -17,7 +17,11 @@ import {
   type ComponentType,
   type SVGProps,
 } from "react";
-import { DEFAULT_CLAIM_WINDOW_SLOTS } from "@/lib/config";
+import {
+  DEFAULT_CLAIM_WINDOW_SLOTS,
+  TOKEN_BASE_UNITS,
+  TOKEN_DECIMALS,
+} from "@/lib/config";
 import { formatDecimalUnits } from "@/lib/format";
 import type {
   ActionKind,
@@ -166,7 +170,10 @@ const ACTION_FIELDS: Record<ActionKind, FieldDefinition[]> = {
 };
 
 function toPcnInput(value: bigint) {
-  return formatDecimalUnits(value, 1_000_000_000n, 9).replaceAll(",", "");
+  return formatDecimalUnits(value, TOKEN_BASE_UNITS, TOKEN_DECIMALS).replaceAll(
+    ",",
+    "",
+  );
 }
 
 function defaultsFor(
@@ -193,18 +200,16 @@ function defaultsFor(
     claimWindowSlots: (
       config?.claimWindowSlots || DEFAULT_CLAIM_WINDOW_SLOTS
     ).toString(),
-    maxEpochMint: toPcnInput(config?.curve.maxEpochMint || 2_500_000_000_000n),
+    maxEpochMint: toPcnInput(config?.curve.maxEpochMint || 2_500_000_000n),
     emissionMultiplierPpm: (
       config?.curve.emissionMultiplierPpm || 1_000_000n
     ).toString(),
     saturationUnits: (config?.curve.saturationUnits || 25_000_000n).toString(),
-    historyMinted: toPcnInput(
-      config?.curve.historyMinted || 100_000_000_000_000n,
-    ),
+    historyMinted: toPcnInput(config?.curve.historyMinted || 100_000_000_000n),
     targetSupportLamportsPerToken: (
       config?.curve.targetSupportLamportsPerToken || 50_000n
     ).toString(),
-    maxSupply: toPcnInput(config?.curve.maxSupply || 1_000_000_000_000_000n),
+    maxSupply: toPcnInput(config?.curve.maxSupply || 1_000_000_000_000n),
     uptimeWeightPpm: (
       config?.performanceWeights.uptimePpm ?? 250_000n
     ).toString(),

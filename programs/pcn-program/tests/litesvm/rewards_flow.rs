@@ -18,7 +18,7 @@ fn happy_path_claims_and_sweeps_dust_in_litesvm() {
     finalize_epoch(&mut ctx, &epoch, 100);
 
     let finalized: pcn_program::Epoch = get_anchor_account(&ctx.svm, &epoch.epoch);
-    assert_eq!(finalized.reward_pool_amount, 632_120_559);
+    assert_eq!(finalized.reward_pool_amount, 632_121);
     assert_eq!(finalized.total_reward_weight, 100);
     assert_eq!(
         account_lamports(&ctx.svm, &ctx.sol_reserve) - reserve_before,
@@ -55,11 +55,11 @@ fn happy_path_claims_and_sweeps_dust_in_litesvm() {
 
     assert_eq!(
         token_amount(&ctx.svm, &epoch.user_one_token.pubkey()),
-        316_060_279
+        316_060
     );
     assert_eq!(
         token_amount(&ctx.svm, &epoch.user_two_token.pubkey()),
-        316_060_279
+        316_060
     );
     assert_eq!(token_amount(&ctx.svm, &epoch.epoch_token_vault), 1);
 

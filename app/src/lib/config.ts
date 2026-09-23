@@ -41,6 +41,6 @@ export const ASSUMED_MS_PER_SLOT = 400;
  */
 export const DEFAULT_CLAIM_WINDOW_SLOTS = 216_000n;
 
-export const TOKEN_DECIMALS = 9;
-export const TOKEN_BASE_UNITS = 1_000_000_000n;
+export const TOKEN_DECIMALS = 6;
+export const TOKEN_BASE_UNITS = 1_000_000n;
 export const LAMPORTS_PER_SOL = 1_000_000_000n;

@@ -47,7 +47,7 @@ fn create_claim_rejects_early_invalid_metric_and_duplicate_in_litesvm() {
 
     let claim_state: pcn_program::Claim = get_anchor_account(&ctx.svm, &claim);
     assert_eq!(claim_state.reward_weight, 50);
-    assert_eq!(claim_state.reward_amount, 316_060_279);
+    assert_eq!(claim_state.reward_amount, 316_060);
 }
 
 #[test]
